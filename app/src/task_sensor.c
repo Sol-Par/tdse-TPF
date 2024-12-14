@@ -48,21 +48,25 @@
 #include "board.h"
 #include "app.h"
 #include "task_sensor_attribute.h"
-#include "task_system_attribute.h"
-#include "task_system_interface.h"
 
+#include "task_set_up_attribute.h"
+#include "task_set_up_interface.h"
+#include "task_normal_attribute.h"
+#include "task_normal_interface.h"
 
 /********************** macros and definitions *******************************/
 #define G_TASK_SEN_CNT_INIT			0ul
 #define G_TASK_SEN_TICK_CNT_INI		0ul
 
 #define DEL_SNS_XX_MIN				0ul
-#define DEL_SNS_XX_MED				25ul
 #define DEL_SNS_XX_MAX				5ul
 
 /********************** internal data declaration ****************************/
+
+bool set_up_mode = true;
+
 const task_sensor_cfg_t task_sensor_cfg_list[] = {
-	{ID_SNS_CONFIG,		SNS_CONFIG_PORT,  	SNS_CONFIG_PIN, 	SNS_CONFIG_PRESSED, 	DEL_SNS_XX_MAX,	EV_SYS_01_CONFIG,	NOEVENT},
+	{ID_SNS_CONFIG,		SNS_CONFIG_PORT,  	SNS_CONFIG_PIN, 	SNS_CONFIG_PRESSED, 	DEL_SNS_XX_MAX,	EV_SYS_XX_CONFIG,	NOEVENT},
 	{ID_SNS_SELECTOR,	SNS_SELECTOR_PORT,  SNS_SELECTOR_PIN,  	SNS_SELECTOR_PRESSED, 	DEL_SNS_XX_MAX, EV_SYS_01_SELECT,	NOEVENT},
 	{ID_SNS_MANUAL,		SNS_MANUAL_PORT,  	SNS_MANUAL_PIN,  	SNS_MANUAL_PRESSED, 	DEL_SNS_XX_MAX, EV_SYS_02_MANUAL,	NOEVENT},
 	{ID_SNS_EXTERIOR,	SNS_EXTERIOR_PORT,  SNS_EXTERIOR_PIN,  	SNS_EXTERIOR_PRESSED, 	DEL_SNS_XX_MAX, EV_SYS_02_EXTERIOR,	NOEVENT},
@@ -74,6 +78,9 @@ const task_sensor_cfg_t task_sensor_cfg_list[] = {
 #define SENSOR_CFG_QTY	(sizeof(task_sensor_cfg_list)/sizeof(task_sensor_cfg_t))
 
 task_sensor_dta_t task_sensor_dta_list[] = {
+	{DEL_SNS_XX_MIN, ST_SNS_XX_UP, EV_SNS_XX_UP},
+	{DEL_SNS_XX_MIN, ST_SNS_XX_UP, EV_SNS_XX_UP},
+	{DEL_SNS_XX_MIN, ST_SNS_XX_UP, EV_SNS_XX_UP},
 	{DEL_SNS_XX_MIN, ST_SNS_XX_UP, EV_SNS_XX_UP},
 	{DEL_SNS_XX_MIN, ST_SNS_XX_UP, EV_SNS_XX_UP},
 	{DEL_SNS_XX_MIN, ST_SNS_XX_UP, EV_SNS_XX_UP},
@@ -202,7 +209,12 @@ void task_sensor_update(void *parameters)
 
 					if (EV_SNS_XX_DOWN == p_task_sensor_dta->event && p_task_sensor_dta->tick == 0)
 					{
-						put_event_task_system(p_task_sensor_cfg->signal_down);
+
+						//if(set_up_mode == true)
+							put_event_task_set_up(p_task_sensor_cfg->signal_down);
+						//else
+							put_event_task_normal(p_task_sensor_cfg->signal_down);
+
 						p_task_sensor_dta->state = ST_SNS_XX_DOWN;
 
 					}
@@ -210,7 +222,6 @@ void task_sensor_update(void *parameters)
 					break;
 
 				case ST_SNS_XX_DOWN:
-
 					if (EV_SNS_XX_UP == p_task_sensor_dta->event)
 					{
 						p_task_sensor_dta->tick = p_task_sensor_cfg->tick_max;
@@ -231,7 +242,10 @@ void task_sensor_update(void *parameters)
 					}
 					if (EV_SNS_XX_UP == p_task_sensor_dta->event && p_task_sensor_dta->tick == 0)
 					{
-						put_event_task_system(p_task_sensor_cfg->signal_up);
+						//if(set_up_mode == true)
+							put_event_task_set_up(p_task_sensor_cfg->signal_up);
+						//else
+							put_event_task_normal(p_task_sensor_cfg->signal_up);
 						p_task_sensor_dta->state = ST_SNS_XX_UP;
 					}
 

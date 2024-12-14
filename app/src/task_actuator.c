@@ -172,8 +172,6 @@ void task_actuator_update(void *parameters)
 			p_task_actuator_cfg = &task_actuator_cfg_list[index];
 			p_task_actuator_dta = &task_actuator_dta_list[index];
 
-
-
 			switch (p_task_actuator_dta->state)
 			{
 				case ST_ACT_XX_OFF:

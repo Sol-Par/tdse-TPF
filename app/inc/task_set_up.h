@@ -29,14 +29,14 @@
  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * @file   : task_system_attribute.h
+ * @file   : task_system.h
  * @date   : Set 26, 2023
  * @author : Juan Manuel Cruz <jcruz@fi.uba.ar> <jcruz@frba.utn.edu.ar>
  * @version	v1.0.0
  */
 
-#ifndef TASK_INC_TASK_SYSTEM_ATTRIBUTE_H_
-#define TASK_INC_TASK_SYSTEM_ATTRIBUTE_H_
+#ifndef TASK_INC_TASK_SET_UP_H_
+#define TASK_INC_TASK_SET_UP_H_
 
 /********************** CPP guard ********************************************/
 #ifdef __cplusplus
@@ -49,56 +49,19 @@ extern "C" {
 
 /********************** typedef **********************************************/
 
-
-/* Events to excite Task System */
-typedef enum task_system_ev {EV_SYS_01_IDLE,
-							 EV_SYS_01_CONFIG,
-							 EV_SYS_01_SELECT,
-							 EV_SYS_02_IDLE,
-							 EV_SYS_02_MANUAL,
-							 EV_SYS_02_EXTERIOR,
-							 EV_SYS_02_DETECTED,
-							 EV_SYS_02_NODETECTED,
-							 EV_SYS_02_OPEN,
-							 EV_SYS_02_CLOSE,
-							 NOEVENT
-} task_system_ev_t;
-
-/* State of Task System */
-typedef enum task_system_st {ST_SYS_01_IDLE,
-							 ST_SYS_01_MENU,
-							 ST_SYS_01_PARAMS,
-							 ST_SYS_01_WAIT_TIME,
-							 ST_SYS_01_STAY_TIME,
-							 ST_SYS_02_IDLE,
-							 ST_SYS_02_CLOSED,
-							 ST_SYS_02_OPENING,
-							 ST_SYS_02_OPENED,
-							 ST_SYS_02_CLOSING
-} task_system_st_t;
-
-typedef struct
-{
-	uint32_t			tick;
-	task_system_st_t	state;
-	task_system_ev_t	event;
-	bool				flag;
-	bool				mode;
-	uint32_t			index;
-	uint32_t 			select;
-	uint32_t			submenu;
-} task_system_dta_t;
-
 /********************** external data declaration ****************************/
-extern task_system_dta_t task_system_dta;
+extern uint32_t g_task_set_up_cnt;
+extern volatile uint32_t g_task_set_up_tick_cnt;
 
 /********************** external functions declaration ***********************/
+extern void task_set_up_init(void *parameters);
+extern void task_set_up_update(void *parameters);
 
 /********************** End of CPP guard *************************************/
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* TASK_INC_TASK_SYSTEM_ATTRIBUTE_H_ */
+#endif /* TASK_INC_TASK_SET_UP_H_ */
 
 /********************** end of file ******************************************/

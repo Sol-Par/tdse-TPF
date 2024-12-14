@@ -290,14 +290,18 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : ACT_03_Pin SNS_07_Pin SNS_06_Pin SNS_03_Pin
-                           SNS_02_Pin SNS_01_Pin ACT_02_Pin ACT_04_Pin
-                           ACT_01_Pin */
-  GPIO_InitStruct.Pin = ACT_03_Pin|SNS_07_Pin|SNS_06_Pin|SNS_03_Pin
-                          |SNS_02_Pin|SNS_01_Pin|ACT_02_Pin|ACT_04_Pin
-                          |ACT_01_Pin;
+  /*Configure GPIO pins : ACT_03_Pin SNS_07_Pin SNS_06_Pin ACT_02_Pin
+                           ACT_04_Pin ACT_01_Pin */
+  GPIO_InitStruct.Pin = ACT_03_Pin|SNS_07_Pin|SNS_06_Pin|ACT_02_Pin
+                          |ACT_04_Pin|ACT_01_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : SNS_03_Pin SNS_02_Pin SNS_01_Pin */
+  GPIO_InitStruct.Pin = SNS_03_Pin|SNS_02_Pin|SNS_01_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pin : D9_Pin */

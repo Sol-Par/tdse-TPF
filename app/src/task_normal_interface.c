@@ -29,48 +29,86 @@
  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * @file   : app.h
+ *
+ * @file   : task_system_interface.c
  * @date   : Set 26, 2023
  * @author : Juan Manuel Cruz <jcruz@fi.uba.ar> <jcruz@frba.utn.edu.ar>
  * @version	v1.0.0
  */
 
-#ifndef APP_INC_APP_H_
-#define APP_INC_APP_H_
-
-/********************** CPP guard ********************************************/
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /********************** inclusions *******************************************/
+/* Project includes. */
 
-/********************** macros ***********************************************/
-#define TEST_0 (0)
-#define TEST_1 (1)
-#define TEST_2 (2)
+#include "main.h"
 
-#define TEST_X (TEST_0)
+/* Demo includes. */
+#include "logger.h"
+#include "dwt.h"
 
-/********************** typedef **********************************************/
+/* Application & Tasks includes. */
+#include "board.h"
+#include "app.h"
+#include "task_normal_attribute.h"
+
+/********************** macros and definitions *******************************/
+#define NOEVENT	(255)
+#define MAX_EVENTS		(16)
+
+/********************** internal data declaration ****************************/
+
+/********************** internal functions declaration ***********************/
+
+/********************** internal data definition *****************************/
+struct
+{
+	uint32_t	head;
+	uint32_t	tail;
+	uint32_t	count;
+	task_normal_ev_t	queue[MAX_EVENTS];
+} queue_task_normal;
 
 /********************** external data declaration ****************************/
-extern uint32_t g_app_cnt;
-extern uint32_t g_app_time_us;
 
-extern volatile uint32_t g_app_tick_cnt;
+/********************** external functions definition ************************/
+void init_queue_event_task_normal(void)
+{
+	uint32_t i;
 
-extern bool set_up_mode;
+	queue_task_normal.head = 0;
+	queue_task_normal.tail = 0;
+	queue_task_normal.count = 0;
 
-/********************** external functions declaration ***********************/
-void app_init(void);
-void app_update(void);
-
-/********************** End of CPP guard *************************************/
-#ifdef __cplusplus
+	for (i = 0; i < MAX_EVENTS; i++)
+		queue_task_normal.queue[i] = NOEVENT;
 }
-#endif
 
-#endif /* APP_INC_APP_H_ */
+void put_event_task_normal(task_normal_ev_t event)
+{
+	queue_task_normal.count++;
+	queue_task_normal.queue[queue_task_normal.head++] = event;
+
+	if (MAX_EVENTS == queue_task_normal.head)
+		queue_task_normal.head = 0;
+}
+
+task_normal_ev_t get_event_task_normal(void)
+
+{
+	task_normal_ev_t event;
+
+	queue_task_normal.count--;
+	event = queue_task_normal.queue[queue_task_normal.tail];
+	queue_task_normal.queue[queue_task_normal.tail++] = NOEVENT;
+
+	if (MAX_EVENTS == queue_task_normal.tail)
+		queue_task_normal.tail = 0;
+
+	return event;
+}
+
+bool any_event_task_normal(void)
+{
+  return (queue_task_normal.head != queue_task_normal.tail);
+}
 
 /********************** end of file ******************************************/

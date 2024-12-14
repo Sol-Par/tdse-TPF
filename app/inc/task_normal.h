@@ -29,85 +29,39 @@
  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- *
- * @file   : task_system_interface.c
+ * @file   : task_system.h
  * @date   : Set 26, 2023
  * @author : Juan Manuel Cruz <jcruz@fi.uba.ar> <jcruz@frba.utn.edu.ar>
  * @version	v1.0.0
  */
 
+#ifndef TASK_INC_TASK_NORMAL_H_
+#define TASK_INC_TASK_NORMAL_H_
+
+/********************** CPP guard ********************************************/
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /********************** inclusions *******************************************/
-/* Project includes. */
-#include "main.h"
 
-/* Demo includes. */
-#include "logger.h"
-#include "dwt.h"
+/********************** macros ***********************************************/
 
-/* Application & Tasks includes. */
-#include "board.h"
-#include "app.h"
-#include "task_system_attribute.h"
-
-/********************** macros and definitions *******************************/
-#define NOEVENT	(255)
-#define MAX_EVENTS		(16)
-
-/********************** internal data declaration ****************************/
-
-/********************** internal functions declaration ***********************/
-
-/********************** internal data definition *****************************/
-struct
-{
-	uint32_t	head;
-	uint32_t	tail;
-	uint32_t	count;
-	task_system_ev_t	queue[MAX_EVENTS];
-} queue_task_a;
+/********************** typedef **********************************************/
 
 /********************** external data declaration ****************************/
+extern uint32_t g_task_normal_cnt;
+extern volatile uint32_t g_task_normal_tick_cnt;
 
-/********************** external functions definition ************************/
-void init_queue_event_task_system(void)
-{
-	uint32_t i;
+/********************** external functions declaration ***********************/
+extern void task_normal_init(void *parameters);
+extern void task_normal_update(void *parameters);
 
-	queue_task_a.head = 0;
-	queue_task_a.tail = 0;
-	queue_task_a.count = 0;
-
-	for (i = 0; i < MAX_EVENTS; i++)
-		queue_task_a.queue[i] = NOEVENT;
+/********************** End of CPP guard *************************************/
+#ifdef __cplusplus
 }
+#endif
 
-void put_event_task_system(task_system_ev_t event)
-{
-	queue_task_a.count++;
-	queue_task_a.queue[queue_task_a.head++] = event;
-
-	if (MAX_EVENTS == queue_task_a.head)
-		queue_task_a.head = 0;
-}
-
-task_system_ev_t get_event_task_system(void)
-
-{
-	task_system_ev_t event;
-
-	queue_task_a.count--;
-	event = queue_task_a.queue[queue_task_a.tail];
-	queue_task_a.queue[queue_task_a.tail++] = NOEVENT;
-
-	if (MAX_EVENTS == queue_task_a.tail)
-		queue_task_a.tail = 0;
-
-	return event;
-}
-
-bool any_event_task_system(void)
-{
-  return (queue_task_a.head != queue_task_a.tail);
-}
+#endif /* TASK_INC_TASK_NORMAL_H_ */
 
 /********************** end of file ******************************************/

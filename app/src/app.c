@@ -45,7 +45,8 @@
 
 /* Application & Tasks includes. */
 #include "board.h"
-#include "task_system.h"
+#include "task_set_up.h"
+#include "task_normal.h"
 #include "task_actuator.h"
 #include "task_sensor.h"
 
@@ -71,7 +72,8 @@ typedef struct {
 /********************** internal data declaration ****************************/
 task_cfg_t task_cfg_list[]	= {
 		{task_sensor_init, 		task_sensor_update, 	NULL},
-		{task_system_init, 		task_system_update, 	NULL},
+		{task_set_up_init, 		task_set_up_update, 	NULL},
+		{task_normal_init, 		task_normal_update, 	NULL},
 		{task_actuator_init,	task_actuator_update, 	NULL}
 };
 
@@ -144,7 +146,6 @@ void app_update(void)
 
     		/* Run task_x_update */
 			(*task_cfg_list[index].task_update)(task_cfg_list[index].parameters);
-
 			cycle_counter = cycle_counter_get();
 			cycle_counter_time_us = cycle_counter_time_us();
 			//HAL_GPIO_TogglePin(LED_A_PORT, LED_A_PIN);
@@ -157,7 +158,7 @@ void app_update(void)
 				task_dta_list[index].WCET = cycle_counter_time_us;
 			}
 
-			LOGGER_LOG("Item: %ld \t Tiempo: %ld \n", index, task_dta_list[index].WCET);
+			//LOGGER_LOG("Item: %ld \t Tiempo: %ld \n", index, task_dta_list[index].WCET);
 	    }
     }
 }
@@ -167,7 +168,8 @@ void HAL_SYSTICK_Callback(void)
 	g_app_tick_cnt++;
 
 	g_task_sensor_tick_cnt++;
-	g_task_system_tick_cnt++;
+	g_task_set_up_tick_cnt++;
+	g_task_normal_tick_cnt++;
 	g_task_actuator_tick_cnt++;
 
 	//HAL_GPIO_TogglePin(LED_A_PORT, LED_A_PIN);

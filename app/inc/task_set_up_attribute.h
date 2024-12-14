@@ -29,14 +29,14 @@
  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * @file   : app.h
+ * @file   : task_system_attribute.h
  * @date   : Set 26, 2023
  * @author : Juan Manuel Cruz <jcruz@fi.uba.ar> <jcruz@frba.utn.edu.ar>
  * @version	v1.0.0
  */
 
-#ifndef APP_INC_APP_H_
-#define APP_INC_APP_H_
+#ifndef TASK_INC_TASK_SET_UP_ATTRIBUTE_H_
+#define TASK_INC_TASK_SET_UP_ATTRIBUTE_H_
 
 /********************** CPP guard ********************************************/
 #ifdef __cplusplus
@@ -44,33 +44,49 @@ extern "C" {
 #endif
 
 /********************** inclusions *******************************************/
-
+#include "task_shared_attribute.h"
 /********************** macros ***********************************************/
-#define TEST_0 (0)
-#define TEST_1 (1)
-#define TEST_2 (2)
-
-#define TEST_X (TEST_0)
 
 /********************** typedef **********************************************/
 
+
+/* Events to excite Task System */
+
+
+typedef enum task_set_up_ev {	EV_SYS_01_CONFIG = EV_SYS_XX_CONFIG,
+								NOEVENT_01 = NOEVENT,
+								EV_SYS_01_IDLE,
+								EV_SYS_01_SELECT,
+} task_set_up_ev_t;
+
+/* State of Task System */
+typedef enum task_set_up_st {ST_SYS_01_IDLE,
+							 ST_SYS_01_MENU,
+							 ST_SYS_01_PARAMS,
+							 ST_SYS_01_WAIT_TIME,
+							 ST_SYS_01_STAY_TIME,
+} task_set_up_st_t;
+
+typedef struct
+{
+	task_set_up_st_t	state;
+	task_set_up_ev_t	event;
+	uint32_t			index;
+	uint32_t 			select;
+	uint32_t			submenu;
+	bool				flag;
+} task_set_up_dta_t;
+
 /********************** external data declaration ****************************/
-extern uint32_t g_app_cnt;
-extern uint32_t g_app_time_us;
-
-extern volatile uint32_t g_app_tick_cnt;
-
-extern bool set_up_mode;
+extern task_set_up_dta_t task_set_up_dta;
 
 /********************** external functions declaration ***********************/
-void app_init(void);
-void app_update(void);
 
 /********************** End of CPP guard *************************************/
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* APP_INC_APP_H_ */
+#endif /* TASK_INC_TASK_SET_UP_ATTRIBUTE_H_ */
 
 /********************** end of file ******************************************/

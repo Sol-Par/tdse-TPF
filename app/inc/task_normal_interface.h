@@ -29,14 +29,14 @@
  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * @file   : app.h
+ * @file   : task_system_interface.h
  * @date   : Set 26, 2023
  * @author : Juan Manuel Cruz <jcruz@fi.uba.ar> <jcruz@frba.utn.edu.ar>
  * @version	v1.0.0
  */
 
-#ifndef APP_INC_APP_H_
-#define APP_INC_APP_H_
+#ifndef TASK_INC_TASK_NORMAL_INTERFACE_H_
+#define TASK_INC_TASK_NORMAL_INTERFACE_H_
 
 /********************** CPP guard ********************************************/
 #ifdef __cplusplus
@@ -46,31 +46,22 @@ extern "C" {
 /********************** inclusions *******************************************/
 
 /********************** macros ***********************************************/
-#define TEST_0 (0)
-#define TEST_1 (1)
-#define TEST_2 (2)
-
-#define TEST_X (TEST_0)
 
 /********************** typedef **********************************************/
 
 /********************** external data declaration ****************************/
-extern uint32_t g_app_cnt;
-extern uint32_t g_app_time_us;
-
-extern volatile uint32_t g_app_tick_cnt;
-
-extern bool set_up_mode;
 
 /********************** external functions declaration ***********************/
-void app_init(void);
-void app_update(void);
+extern void init_queue_event_task_normal(void);
+extern void put_event_task_normal(task_normal_ev_t event);
+extern task_normal_ev_t get_event_task_normal(void);
+extern bool any_event_task_normal(void);
 
 /********************** End of CPP guard *************************************/
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* APP_INC_APP_H_ */
+#endif /* TASK_INC_TASK_SYSTEM_INTERFACE_H_ */
 
 /********************** end of file ******************************************/
