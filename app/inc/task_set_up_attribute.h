@@ -54,9 +54,9 @@ extern "C" {
 
 
 typedef enum task_set_up_ev {	EV_SYS_01_CONFIG = EV_SYS_XX_CONFIG,
+								EV_SYS_01_SELECT = EV_SYS_XX_SELECT,
 								NOEVENT_01 = NOEVENT,
-								EV_SYS_01_IDLE,
-								EV_SYS_01_SELECT,
+								EV_SYS_01_IDLE
 } task_set_up_ev_t;
 
 /* State of Task System */

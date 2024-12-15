@@ -53,15 +53,16 @@ extern "C" {
 /* Events to excite Task System */
 
 
-typedef enum task_normal_ev {EV_SYS_02_CONFIG = EV_SYS_XX_CONFIG,
-	 	 	 	 	 	 	 NOEVENT_02 = NOEVENT,
-							 EV_SYS_02_IDLE,
-							 EV_SYS_02_MANUAL,
-							 EV_SYS_02_EXTERIOR,
-							 EV_SYS_02_DETECTED,
-							 EV_SYS_02_NODETECTED,
-							 EV_SYS_02_OPEN,
-							 EV_SYS_02_CLOSE
+typedef enum task_normal_ev {	EV_SYS_02_CONFIG = EV_SYS_XX_CONFIG,
+								EV_SYS_02_SELECT = EV_SYS_XX_SELECT,
+								NOEVENT_02 = NOEVENT,
+								EV_SYS_02_IDLE,
+								EV_SYS_02_MANUAL,
+								EV_SYS_02_EXTERIOR,
+								EV_SYS_02_DETECTED,
+								EV_SYS_02_NODETECTED,
+								EV_SYS_02_OPEN,
+								EV_SYS_02_CLOSE
 
 } task_normal_ev_t;
 
@@ -79,7 +80,9 @@ typedef struct
 	task_normal_st_t	state;
 	task_normal_ev_t	event;
 	bool				detected;
+	bool				alarm_on;
 	bool				flag;
+	uint32_t			select;
 } task_normal_dta_t;
 
 /********************** external data declaration ****************************/

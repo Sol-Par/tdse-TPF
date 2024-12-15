@@ -58,17 +58,17 @@
 #define G_TASK_SEN_CNT_INIT			0ul
 #define G_TASK_SEN_TICK_CNT_INI		0ul
 
-#define DEL_SNS_XX_MIN				0ul
-#define DEL_SNS_XX_MAX				5ul
+#define DEL_SNS_XX_MIN				5ul
+#define DEL_SNS_XX_MAX				50ul
 
 /********************** internal data declaration ****************************/
 
 bool set_up_mode = true;
 
 const task_sensor_cfg_t task_sensor_cfg_list[] = {
-	{ID_SNS_CONFIG,		SNS_CONFIG_PORT,  	SNS_CONFIG_PIN, 	SNS_CONFIG_PRESSED, 	DEL_SNS_XX_MAX,	EV_SYS_XX_CONFIG,	NOEVENT},
-	{ID_SNS_SELECTOR,	SNS_SELECTOR_PORT,  SNS_SELECTOR_PIN,  	SNS_SELECTOR_PRESSED, 	DEL_SNS_XX_MAX, EV_SYS_01_SELECT,	NOEVENT},
-	{ID_SNS_MANUAL,		SNS_MANUAL_PORT,  	SNS_MANUAL_PIN,  	SNS_MANUAL_PRESSED, 	DEL_SNS_XX_MAX, EV_SYS_02_MANUAL,	NOEVENT},
+	{ID_SNS_CONFIG,		SNS_CONFIG_PORT,  	SNS_CONFIG_PIN, 	SNS_CONFIG_PRESSED, 	DEL_SNS_XX_MIN,	EV_SYS_XX_CONFIG,	NOEVENT},
+	{ID_SNS_SELECTOR,	SNS_SELECTOR_PORT,  SNS_SELECTOR_PIN,  	SNS_SELECTOR_PRESSED, 	DEL_SNS_XX_MIN, EV_SYS_XX_SELECT,	NOEVENT},
+	{ID_SNS_MANUAL,		SNS_MANUAL_PORT,  	SNS_MANUAL_PIN,  	SNS_MANUAL_PRESSED, 	DEL_SNS_XX_MIN, EV_SYS_02_MANUAL,	NOEVENT},
 	{ID_SNS_EXTERIOR,	SNS_EXTERIOR_PORT,  SNS_EXTERIOR_PIN,  	SNS_EXTERIOR_PRESSED, 	DEL_SNS_XX_MAX, EV_SYS_02_EXTERIOR,	NOEVENT},
 	{ID_SNS_DETECTED,  	SNS_DETECTED_PORT,  SNS_DETECTED_PIN,  	SNS_DETECTED_PRESSED, 	DEL_SNS_XX_MAX, EV_SYS_02_DETECTED,	EV_SYS_02_NODETECTED},
 	{ID_SNS_OPEN,  		SNS_OPEN_PORT,  	SNS_OPEN_PIN,  		SNS_OPEN_PRESSED, 		DEL_SNS_XX_MAX, EV_SYS_02_OPEN,		NOEVENT},
@@ -176,6 +176,7 @@ void task_sensor_update(void *parameters)
 			if (p_task_sensor_cfg->pressed == HAL_GPIO_ReadPin(p_task_sensor_cfg->gpio_port, p_task_sensor_cfg->pin))
 			{
 				p_task_sensor_dta->event =	EV_SNS_XX_DOWN;
+				//LOGGER_LOG("Apretado\n");
 			}
 			else
 			{
@@ -210,18 +211,18 @@ void task_sensor_update(void *parameters)
 					if (EV_SNS_XX_DOWN == p_task_sensor_dta->event && p_task_sensor_dta->tick == 0)
 					{
 
-						//if(set_up_mode == true)
+						if(set_up_mode == true)
 							put_event_task_set_up(p_task_sensor_cfg->signal_down);
-						//else
+						else
 							put_event_task_normal(p_task_sensor_cfg->signal_down);
 
 						p_task_sensor_dta->state = ST_SNS_XX_DOWN;
-
 					}
 
 					break;
 
 				case ST_SNS_XX_DOWN:
+
 					if (EV_SNS_XX_UP == p_task_sensor_dta->event)
 					{
 						p_task_sensor_dta->tick = p_task_sensor_cfg->tick_max;
@@ -242,10 +243,11 @@ void task_sensor_update(void *parameters)
 					}
 					if (EV_SNS_XX_UP == p_task_sensor_dta->event && p_task_sensor_dta->tick == 0)
 					{
-						//if(set_up_mode == true)
+						if(set_up_mode == true)
 							put_event_task_set_up(p_task_sensor_cfg->signal_up);
-						//else
+						else
 							put_event_task_normal(p_task_sensor_cfg->signal_up);
+
 						p_task_sensor_dta->state = ST_SNS_XX_UP;
 					}
 

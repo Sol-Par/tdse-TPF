@@ -24,8 +24,9 @@ extern "C" {
 /* Events to excite Task System */
 
 
-typedef enum task_shared_ev {EV_SYS_XX_CONFIG,
-							 NOEVENT
+typedef enum task_shared_ev {	EV_SYS_XX_CONFIG,
+								EV_SYS_XX_SELECT,
+								NOEVENT
 } task_shared_ev_t;
 
 

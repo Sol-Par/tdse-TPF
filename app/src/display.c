@@ -47,10 +47,8 @@
 #define DISPLAY_IR_FUNCTION_SET_5x10DOTS 0b00000100
 #define DISPLAY_IR_FUNCTION_SET_5x8DOTS  0b00000000
 
-#define DISPLAY_20x4_LINE1_FIRST_CHARACTER_ADDRESS 0
-#define DISPLAY_20x4_LINE2_FIRST_CHARACTER_ADDRESS 64
-#define DISPLAY_20x4_LINE3_FIRST_CHARACTER_ADDRESS 20
-#define DISPLAY_20x4_LINE4_FIRST_CHARACTER_ADDRESS 84
+#define DISPLAY_16x2_LINE1_FIRST_CHARACTER_ADDRESS 0
+#define DISPLAY_16x2_LINE2_FIRST_CHARACTER_ADDRESS 64
 
 #define DISPLAY_RS_INSTRUCTION 0
 #define DISPLAY_RS_DATA        1
@@ -102,7 +100,6 @@ static bool initial8BitCommunicationIsCompleted;
 static void displayPinWrite( uint8_t pinName, int value );
 static void displayDataBusWrite( uint8_t dataByte );
 static void displayCodeWrite( bool type, uint8_t dataBus );
-void displayClean(uint8_t line);
 
 /********************** internal data definition *****************************/
 /********************** external data declaration ****************************/
@@ -198,7 +195,7 @@ void displayCharPositionWrite( uint8_t charPositionX, uint8_t charPositionY )
         case 0:
             displayCodeWrite( DISPLAY_RS_INSTRUCTION,
                               DISPLAY_IR_SET_DDRAM_ADDR |
-                              ( DISPLAY_20x4_LINE1_FIRST_CHARACTER_ADDRESS +
+                              ( DISPLAY_16x2_LINE1_FIRST_CHARACTER_ADDRESS +
                                 charPositionX ) );
             HAL_Delay(1);
         break;
@@ -206,26 +203,11 @@ void displayCharPositionWrite( uint8_t charPositionX, uint8_t charPositionY )
         case 1:
             displayCodeWrite( DISPLAY_RS_INSTRUCTION,
                               DISPLAY_IR_SET_DDRAM_ADDR |
-                              ( DISPLAY_20x4_LINE2_FIRST_CHARACTER_ADDRESS +
+                              ( DISPLAY_16x2_LINE2_FIRST_CHARACTER_ADDRESS +
                                 charPositionX ) );
             HAL_Delay(1);
         break;
 
-        case 2:
-            displayCodeWrite( DISPLAY_RS_INSTRUCTION,
-                              DISPLAY_IR_SET_DDRAM_ADDR |
-                              ( DISPLAY_20x4_LINE3_FIRST_CHARACTER_ADDRESS +
-                                charPositionX ) );
-            HAL_Delay(1);
-        break;
-
-        case 3:
-            displayCodeWrite( DISPLAY_RS_INSTRUCTION,
-                              DISPLAY_IR_SET_DDRAM_ADDR |
-                              ( DISPLAY_20x4_LINE4_FIRST_CHARACTER_ADDRESS +
-                                charPositionX ) );
-            HAL_Delay(1);
-        break;
     }
 }
 
@@ -361,7 +343,7 @@ static void displayDataBusWrite( uint8_t dataBus )
 }
 
 void displayClean(uint8_t line){
-	for(uint32_t i = 0; i < 20; i++){
+	for(uint32_t i = 0; i < 16; i++){
 		displayCharPositionWrite(i,line);
 		displayStringWrite(" ");
 	}

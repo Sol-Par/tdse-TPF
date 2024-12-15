@@ -47,8 +47,12 @@
 /* Application & Tasks includes. */
 #include "board.h"
 #include "app.h"
+
+#include "display.h"
+
 #include "task_set_up_attribute.h"
 #include "task_set_up_interface.h"
+
 #include "task_actuator_attribute.h"
 #include "task_actuator_interface.h"
 
@@ -57,8 +61,8 @@
 #define G_TASK_SYS_TICK_CNT_INI		0ul
 
 /********************** internal data declaration ****************************/
-uint32_t stay_time;
-uint32_t wait_time;
+uint32_t stay_time = 30000;
+uint32_t wait_time = 30000;
 
 task_set_up_dta_t task_set_up_dta = {ST_SYS_01_IDLE, EV_SYS_01_IDLE, 0, 0, 0};
 
@@ -109,12 +113,21 @@ void task_set_up_init(void *parameters)
 	LOGGER_LOG("   %s = %s\r\n", GET_NAME(b_event), (b_event ? "true" : "false"));
 
 	g_task_set_up_tick_cnt = G_TASK_SYS_TICK_CNT_INI;
+
+    displayInit( DISPLAY_CONNECTION_GPIO_4BITS );
+    displayCharPositionWrite(0,0);
+	displayStringWrite(">");
+	displayCharPositionWrite(1,0);
+	displayStringWrite("Normal");
+	displayCharPositionWrite(10,0);
+	displayStringWrite("Set_Up");
 }
 
 void task_set_up_update(void *parameters)
 {
 	task_set_up_dta_t *p_task_set_up_dta;
 	bool b_time_update_required = false;
+	char str[16];
 
 	/* Update Task System Counter */
 	g_task_set_up_cnt++;
@@ -165,20 +178,55 @@ void task_set_up_update(void *parameters)
 
 			case ST_SYS_01_IDLE:
 
-				if ((p_task_set_up_dta->event == EV_SYS_01_CONFIG) && (set_up_mode == true))
-				{
-					p_task_set_up_dta->state = ST_SYS_01_MENU;
-					p_task_set_up_dta -> index = 0;
-					p_task_set_up_dta -> select = 0;
-					LOGGER_LOG("Setup - Menu\n");
+				if(p_task_set_up_dta->event == EV_SYS_01_SELECT && set_up_mode == true){
+					displayCharPositionWrite(p_task_set_up_dta->select*9, 0);
+					displayStringWrite(" ");
+					p_task_set_up_dta->select = (((p_task_set_up_dta->select) + 1) % 2);
+					displayCharPositionWrite(p_task_set_up_dta->select*9, 0);
+					displayStringWrite(">");
 				}
+
+				if(p_task_set_up_dta->event == EV_SYS_01_CONFIG && set_up_mode == true){
+
+					switch (p_task_set_up_dta -> select){
+
+						case 0:
+							set_up_mode = false;
+							break;
+
+						case 1:
+							p_task_set_up_dta->state = ST_SYS_01_MENU;
+							p_task_set_up_dta -> index = 0;
+							p_task_set_up_dta -> select = 0;
+
+							//LOGGER_LOG("Setup - Menu\n");
+							displayClean(0);
+							displayClean(1);
+							displayCharPositionWrite(1,0);
+							displayStringWrite(">");
+							displayCharPositionWrite(2, 0);
+							displayStringWrite("Ent  Nex  Esc ");
+							displayCharPositionWrite(1,1);
+							displayStringWrite(">");
+							displayCharPositionWrite(2, 1);
+							displayStringWrite("Wait");
+							displayCharPositionWrite(10, 1);
+							displayStringWrite("Stay");
+
+							break;
+					}
+				}
+
 				break;
 
 			case ST_SYS_01_MENU:
 
 				if(p_task_set_up_dta->event == EV_SYS_01_SELECT){
+					displayCharPositionWrite((p_task_set_up_dta->select*5)+ 1, 0);
+					displayStringWrite(" ");
 					p_task_set_up_dta->select = (((p_task_set_up_dta->select) + 1) % 3);
-					LOGGER_LOG("Setup - Select - %ld\n", p_task_set_up_dta->select);
+					displayCharPositionWrite((p_task_set_up_dta->select*5)+ 1, 0);
+					displayStringWrite(">");
 				}
 
 				if(p_task_set_up_dta->event == EV_SYS_01_CONFIG){
@@ -190,18 +238,33 @@ void task_set_up_update(void *parameters)
 							p_task_set_up_dta -> index = 0;
 							p_task_set_up_dta -> select = 0;
 							p_task_set_up_dta -> state = ST_SYS_01_PARAMS;
-							LOGGER_LOG("Setup - Params\n");
+							displayClean(0);
+							displayClean(1);
+							displayCharPositionWrite(1,0);
+							displayStringWrite(">");
+							displayCharPositionWrite(2,0);
+							displayStringWrite("Ent  Nex  Esc ");
 							break;
 
 						case 1:
+							displayCharPositionWrite((p_task_set_up_dta->index*8)+ 1, 1);
+							displayStringWrite(" ");
 							p_task_set_up_dta->index = ((p_task_set_up_dta->index + 1) % 2);
-							LOGGER_LOG("Setup - Index - %ld\n", p_task_set_up_dta->index);
+							displayCharPositionWrite((p_task_set_up_dta->index*8)+ 1, 1);
+							displayStringWrite(">");
 							break;
 
 						case 2:
-							set_up_mode = false;
 							p_task_set_up_dta -> state = ST_SYS_01_IDLE;
-							LOGGER_LOG("Setup - Idle\n");
+							p_task_set_up_dta -> select = 0;
+							displayClean(0);
+							displayClean(1);
+						    displayCharPositionWrite(0,0);
+							displayStringWrite(">");
+							displayCharPositionWrite(1,0);
+							displayStringWrite("Normal");
+							displayCharPositionWrite(10,0);
+							displayStringWrite("Set_Up");
 							break;
 
 					}
@@ -215,13 +278,19 @@ void task_set_up_update(void *parameters)
 
 					case 0:
 						p_task_set_up_dta -> state = ST_SYS_01_WAIT_TIME;
-						LOGGER_LOG("Setup - Wait Time\n");
+						displayCharPositionWrite(2, 1);
+						displayStringWrite("Wait Time:");
+						displayCharPositionWrite(13, 1);
+						displayStringWrite("0 s");
 						break;
 
 
 					case 1:
 						p_task_set_up_dta -> state = ST_SYS_01_STAY_TIME;
-						LOGGER_LOG("Setup - Stay Time\n");
+						displayCharPositionWrite(2, 1);
+						displayStringWrite("Stay Time:");
+						displayCharPositionWrite(13, 1);
+						displayStringWrite("0 s");
 						break;
 				}
 
@@ -230,8 +299,11 @@ void task_set_up_update(void *parameters)
 			case ST_SYS_01_WAIT_TIME:
 
 				if(p_task_set_up_dta->event == EV_SYS_01_SELECT){
-					p_task_set_up_dta->select = ((p_task_set_up_dta->select + 1) % 3);
-					LOGGER_LOG("Setup - Select - %ld\n", p_task_set_up_dta->select);
+					displayCharPositionWrite((p_task_set_up_dta->select*5)+ 1, 0);
+					displayStringWrite(" ");
+					p_task_set_up_dta->select = (((p_task_set_up_dta->select) + 1) % 3);
+					displayCharPositionWrite((p_task_set_up_dta->select*5)+ 1, 0);
+					displayStringWrite(">");
 				}
 
 				if(p_task_set_up_dta->event == EV_SYS_01_CONFIG){
@@ -239,23 +311,54 @@ void task_set_up_update(void *parameters)
 					switch (p_task_set_up_dta -> select){
 
 						case 0:
-							wait_time = (p_task_set_up_dta -> index) * 10;
+							wait_time = ((p_task_set_up_dta -> index)+ 1) * 10;
 							p_task_set_up_dta -> submenu = 0;
 							p_task_set_up_dta -> index = 0;
 							p_task_set_up_dta -> select = 0;
 							p_task_set_up_dta -> state = ST_SYS_01_MENU;
+							displayClean(0);
+							displayClean(1);
+							displayCharPositionWrite(1,0);
+							displayStringWrite(">");
+							displayCharPositionWrite(2, 0);
+							displayStringWrite("Ent  Nex  Esc ");
+							displayCharPositionWrite(1,1);
+							displayStringWrite(">");
+							displayCharPositionWrite(2, 1);
+							displayStringWrite("Wait");
+							displayCharPositionWrite(10, 1);
+							displayStringWrite("Stay");
 							LOGGER_LOG("Wait Time: %ld\n", wait_time);
 							break;
 
 						case 1:
+							displayCharPositionWrite(13, 1);
+							snprintf(str, sizeof(str), "%ld", (p_task_set_up_dta->index)+ 1);
+							displayStringWrite(str);
 							p_task_set_up_dta->index = ((p_task_set_up_dta->index + 1) % 10);
-							LOGGER_LOG("Setup - Index - %ld\n", p_task_set_up_dta->index);
+							if(p_task_set_up_dta->index == 1){
+								displayCharPositionWrite(14, 1);
+								displayStringWrite(" ");
+							}
 							break;
 
 						case 2:
-							set_up_mode = false;
-							p_task_set_up_dta -> state = ST_SYS_01_IDLE;
-							LOGGER_LOG("Setup - Idle\n");
+							p_task_set_up_dta -> submenu = 0;
+							p_task_set_up_dta -> index = 0;
+							p_task_set_up_dta -> select = 0;
+							p_task_set_up_dta -> state = ST_SYS_01_MENU;
+							displayClean(0);
+							displayClean(1);
+							displayCharPositionWrite(1,0);
+							displayStringWrite(">");
+							displayCharPositionWrite(2, 0);
+							displayStringWrite("Ent  Nex  Esc ");
+							displayCharPositionWrite(1,1);
+							displayStringWrite(">");
+							displayCharPositionWrite(2, 1);
+							displayStringWrite("Wait");
+							displayCharPositionWrite(10, 1);
+							displayStringWrite("Stay");
 							break;
 
 					}
@@ -266,8 +369,11 @@ void task_set_up_update(void *parameters)
 			case ST_SYS_01_STAY_TIME:
 
 				if(p_task_set_up_dta->event == EV_SYS_01_SELECT){
-					p_task_set_up_dta->select = ((p_task_set_up_dta->select + 1) % 3);
-					LOGGER_LOG("Setup - Select - %ld\n", p_task_set_up_dta->select);
+					displayCharPositionWrite((p_task_set_up_dta->select*5)+ 1, 0);
+					displayStringWrite(" ");
+					p_task_set_up_dta->select = (((p_task_set_up_dta->select) + 1) % 3);
+					displayCharPositionWrite((p_task_set_up_dta->select*5)+ 1, 0);
+					displayStringWrite(">");
 				}
 
 				if(p_task_set_up_dta->event == EV_SYS_01_CONFIG){
@@ -280,18 +386,49 @@ void task_set_up_update(void *parameters)
 							p_task_set_up_dta -> index = 0;
 							p_task_set_up_dta -> select = 0;
 							p_task_set_up_dta -> state = ST_SYS_01_MENU;
+							displayClean(0);
+							displayClean(1);
+							displayCharPositionWrite(1,0);
+							displayStringWrite(">");
+							displayCharPositionWrite(2, 0);
+							displayStringWrite("Ent  Nex  Esc ");
+							displayCharPositionWrite(1,1);
+							displayStringWrite(">");
+							displayCharPositionWrite(2, 1);
+							displayStringWrite("Wait");
+							displayCharPositionWrite(10, 1);
+							displayStringWrite("Stay");
 							LOGGER_LOG("Stay Time: %ld\n", stay_time);
 							break;
 
 						case 1:
+							displayCharPositionWrite(13, 1);
+							snprintf(str, sizeof(str), "%ld", (p_task_set_up_dta->index)+ 1);
+							displayStringWrite(str);
 							p_task_set_up_dta->index = ((p_task_set_up_dta->index + 1) % 10);
-							LOGGER_LOG("Setup - Index - %ld\n", p_task_set_up_dta->index);
+							if(p_task_set_up_dta->index == 1){
+								displayCharPositionWrite(14, 1);
+								displayStringWrite(" ");
+							}
 							break;
 
 						case 2:
-							set_up_mode = false;
-							p_task_set_up_dta -> state = ST_SYS_01_IDLE;
-							LOGGER_LOG("Setup - Idle\n");
+							p_task_set_up_dta -> submenu = 0;
+							p_task_set_up_dta -> index = 0;
+							p_task_set_up_dta -> select = 0;
+							p_task_set_up_dta -> state = ST_SYS_01_MENU;
+							displayClean(0);
+							displayClean(1);
+							displayCharPositionWrite(1,0);
+							displayStringWrite(">");
+							displayCharPositionWrite(2, 0);
+							displayStringWrite("Ent  Nex  Esc ");
+							displayCharPositionWrite(1,1);
+							displayStringWrite(">");
+							displayCharPositionWrite(2, 1);
+							displayStringWrite("Wait");
+							displayCharPositionWrite(10, 1);
+							displayStringWrite("Stay");
 							break;
 
 					}

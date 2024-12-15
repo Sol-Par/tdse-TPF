@@ -273,7 +273,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(D9_GPIO_Port, D9_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(D10_GPIO_Port, D10_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, D10_Pin|ACT_01_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -290,16 +290,10 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : ACT_03_Pin SNS_07_Pin SNS_06_Pin ACT_02_Pin
-                           ACT_04_Pin ACT_01_Pin */
-  GPIO_InitStruct.Pin = ACT_03_Pin|SNS_07_Pin|SNS_06_Pin|ACT_02_Pin
-                          |ACT_04_Pin|ACT_01_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : SNS_03_Pin SNS_02_Pin SNS_01_Pin */
-  GPIO_InitStruct.Pin = SNS_03_Pin|SNS_02_Pin|SNS_01_Pin;
+  /*Configure GPIO pins : ACT_03_Pin SNS_07_Pin SNS_06_Pin SNS_03_Pin
+                           SNS_02_Pin SNS_01_Pin ACT_02_Pin ACT_04_Pin */
+  GPIO_InitStruct.Pin = ACT_03_Pin|SNS_07_Pin|SNS_06_Pin|SNS_03_Pin
+                          |SNS_02_Pin|SNS_01_Pin|ACT_02_Pin|ACT_04_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
@@ -314,15 +308,15 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pins : ACT_05_Pin SNS_05_Pin SNS_04_Pin */
   GPIO_InitStruct.Pin = ACT_05_Pin|SNS_05_Pin|SNS_04_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : D10_Pin */
-  GPIO_InitStruct.Pin = D10_Pin;
+  /*Configure GPIO pins : D10_Pin ACT_01_Pin */
+  GPIO_InitStruct.Pin = D10_Pin|ACT_01_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(D10_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
