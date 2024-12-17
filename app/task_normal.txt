@@ -1,0 +1,146 @@
+task_normal.c
+
+Subprograma que se encarga de ejecutar el modo Normal de funcionamiento.
+
+Se encarga del manejo de apertura y cierre de las puertas, sistema de detección de presencia y sistema de alarma.
+
+
+Se utilizan dos funciones principales:
+
+void task_normal_init(void *parameters)
+
+Se encarga de inicializar los eventos del sistema.
+
+
+task_normal_update(void *parameters):
+
+Se encarga de ejecutar el programa que realiza las tareas ciclicas (apertura, verificar estado de sensores, modificar estado de los actuadores y cierre).
+
+Se muestra en display la temperatura ambiente y la temperatura interna del microprocesador. 
+
+Se realiza un switch sobre p_task_normal_dta->state:
+
+ST_SYS_02_IDLE: Estado de espera al pulsado de los botones
+
+EV_SYS_02_SELECT(Se pulsa el boton select): Si la flag set_up_mode == false se cambia la posicion de ">" en el display al modo Set_up y se cambia set_up_mode == true, pasando al modo Set_up.
+
+EV_SYS_02_CONFIG(Se pulsa el boton config): Si la flag set_up_mode == false se enciende el LED que indica que la puerta esta completamente cerrada y se pasa al estado ST_SYS_02_CLOSED.
+
+ST_SYS_02_CLOSED:
+
+EV_SYS_02_CONFIG: Se pasa al estado ST_SYS_02_IDLE y se vuelve al menu principal.
+
+EV_SYS_02_EXTERIOR || EV_SYS_02_MANUAL: Si se activa el sensor de presencia exterior o se pulsa el boton manual, se pasa al estado ST_SYS_02_OPENING y se empieza a abrir la puerta (Titila el LED de apertura de puerta).
+
+ST_SYS_02_OPENING:
+
+EV_SYS_02_CONFIG: Se pasa al estado ST_SYS_02_IDLE y se vuelve al menu principal. Se apaga el LED de apertura y el de puerta cerrada.
+
+EV_SYS_02_MANUAL: Cierra la puerta, encendiendo el LED de puerta cerrada, apagando el de apertura y el de puerta no cerrada. Se pasa al estado ST_SYS_02_CLOSED.
+
+EV_SYS_02_OPEN: Se apaga el LED de apertura, se iguala p_task_normal_dta->tick = wait_time; se activa la flag timer = true, lo que empieza la cuenta regresiva hasta cerrar puerta y se cambia el estado a ST_SYS_02_OPENED.
+
+ST_SYS_02_OPENED:
+Si p_task_normal_dta->tick == 0 y no se detecta persona se enciende el LED de cierre y se pasa al estado ST_SYS_02_CLOSING. La flag timer = false.
+
+Si p_task_normal_dta->tick == 0 && p_task_normal_dta -> detected == true && p_task_normal_dta -> alarm_on == false. Se detecta persona y aun no se activo la alarma al finalizar tiempo de espera para cierre, por lo que se enciende la alarma y se iguala p_task_normal_dta->tick = stay_time. El timer = true.
+
+Si p_task_normal_dta->tick == 0 && p_task_normal_dta -> detected == true && p_task_normal_dta -> alarm_on == true. Se llega al final del tiempo de espera para cierre extra, cerrando la puerta con el usuario aun bajo la puerta (se muere :P). La alarma deja de ulular y suena de forma constante.
+
+Si p_task_normal_dta->event == EV_SYS_02_NODETECTED && p_task_normal_dta->alarm_on == true. La alarma deja de ulular y se reinicia el tiempo al tiempo de cierre habitual.
+
+Si p_task_normal_dta->event == EV_SYS_02_DETECTED && p_task_normal_dta->detected == false. Se activa la flag detected. Se activa la flag timer.
+
+p_task_normal_dta->event == EV_SYS_02_NODETECTED && p_task_normal_dta->detected == true. Se desactiva la flag detected. Se activa la flag timer.
+
+EV_SYS_02_MANUAL: Se pulsa el boton manual, se pasa al estado ST_SYS_02_CLOSING y se empieza a cerrar la puerta (Titila el LED de cierre de puerta).
+
+EV_SYS_02_CONFIG: Si la flag detected esta activada, se apaga la alarma. Se apaga el LED de puerta no cerrada y se pasa al estado ST_SYS_02_IDLE, volviendo al menu principal.
+
+Si p_task_normal_dta->tick > 0 && timer == true. Se le baja el valor al timer hasta llegar a cero y empezar a cerrar la puerta.
+
+
+ST_SYS_02_CLOSING:
+
+EV_SYS_02_DETECTED: Si se detecta persona (se activa el sensor exterior), se apaga el LED de cierre y se pasa a ST_SYS_02_OPENED. Se configura el tiempo de espera a stay_time.
+
+EV_SYS_02_MANUAL: Se apaga el LED de cierre y se abre la puerta de forma manual, pasando a ST_SYS_02_OPENED y configurando el tiempo de espera a stay_time.
+
+EV_SYS_02_CONFIG: Se apaga el LED de cierre y el LED que indica que la puerta no esa completamente cerrada y se pasa a ST_SYS_02_IDLE, volviendo al menu principal.
+
+EV_SYS_02_CLOSE: Se apaga el LED de cierre, el LED que indica que la puerta no esta cerrada y se enciende el que indica que la puerta esta completamente cerrada. Se pasa al estado ST_SYS_02_CLOSED.
+
+Al finalizar todas las tareas se hace p_task_normal_dta -> flag = false.
+
+
+task_normal_attribute.h:
+
+typedef struct
+{
+	uint32_t			tick;
+	task_normal_st_t	        state;
+	task_normal_ev_t	        event;
+	bool				detected;
+	bool				alarm_on;
+	bool				flag;
+	uint32_t			select;
+} task_normal_dta_t;
+
+tick: Cuenta regresivamente para el cierre de la puerta.
+
+state: Estado en que se encuentra al momento de ejecucion.
+event: Evento en que se encuentra al momento de ejecucion.
+detected: Flag que se activa si se detecta presencia bajo la puerta.
+alarm_on: Flag que indica que la alarma esta encendida.
+flag: Flag que indica si hay eventos o no en cola.
+select:Vale 0 o 1, indica que opcion del menu principal se selecciono.
+
+Enumerador con la cantidad de estados:
+
+typedef enum task_normal_st {
+ST_SYS_02_IDLE,
+ST_SYS_02_CLOSED,
+ST_SYS_02_OPENING,
+ST_SYS_02_OPENED,
+ST_SYS_02_CLOSING
+} task_normal_st_t;
+
+Enumerador de la cantidad de eventos:
+
+typedef enum task_normal_ev {	
+
+	EV_SYS_02_CONFIG = EV_SYS_XX_CONFIG,
+								EV_SYS_02_SELECT = EV_SYS_XX_SELECT,
+								NOEVENT_02 = NOEVENT,
+								EV_SYS_02_IDLE,
+								EV_SYS_02_MANUAL,
+								EV_SYS_02_EXTERIOR,
+								EV_SYS_02_DETECTED,
+								EV_SYS_02_NODETECTED,
+								EV_SYS_02_OPEN,
+								EV_SYS_02_CLOSE
+
+} task_normal_ev_t;
+
+donde EV_SYS_XX_CONFIG, EV_SYS_XX_SELECT y NOEVENT son elementos del enum compartido entre sistema hallado en task_shared_attributes.h
+
+
+task_normal_interface.c:
+
+Estructuras de datos
+queue_task_a: Estructura que define una pila con la cantidad de eventos del sistema. Contiene 3 enteros sin signo de 32 bits llamados head (primer elemento de la cola), tail (último elemento de la cola) y count (cuenta la cantidad de eventos en la pila). Se le suma +1 a head si se agrega algún elemento a la pila y se le reduce -1 a tail si se saca un elemento de la pila. Ademas se agrega un elemento del tipo task_normal_event_t llamado queue que es la pila donde se guarda y se sacan los eventos.
+
+Funciones
+init_queue_event_task_normal: Función que recibe un parámetro void y devuelve void. Se utiliza para inicializar la pila, iniciando head, tail y count a cero y agregando a la cantidad elegida de eventos (MAX_EVENTS) un NOEVENT, que significa que no hay ningún evento en esa posición de la pila al inicio.
+
+put_event_task_normal: Función que recibe un parámetro del tipo task_normal_ev_t y devuelve void. Esta función se encarga de agregar el elemento del tipo task_normal_ev_t en el tope de la pila, aumentando el contador de la cantidad de eventos (count) y el contador de head en +1 luego de agregar el evento a la pila. Si el contador de head alcanza MAX_EVENTS éste se resetea a 0.
+
+get_event_task_normal: Función que recibe un parámetro del tipo void y devuelve un parámetro del tipo task_normal_ev_t. Se encarga de sacar los elementos de la cola de la pila, restando -1 al contador de cantidad de eventos (count), obteniendo el evento de la cola y agregando en esta posición un NOEVENT , luego aumenta +1 al contador de la cola (tail). Si el contador de tail alcanza MAX_EVENTS éste se resetea a 0.
+
+any_event_task_normal: Función que recibe un parámetro del tipo void y devuelve un parámetro booleano. Indica si hay algún evento por procesar en la pila comparando los valores de los contadores head y tail. Devuelve true si head != tail.
+
+
+
+
+
+

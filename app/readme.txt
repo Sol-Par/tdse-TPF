@@ -14,13 +14,13 @@ Example: tdse-tpf
   display.c (display.h) 
    Utilities for LCD display managment.
 
-  task_set_up.c (task_set_up.h, task_set_up_attribute.h) 
+  task_set_up.c (task_set_up.h, task_set_up_attribute.h, task_shared_attributes.h) 
    Non-Blocking Code -> Set_Up Mode Modeling
   
   task_set_up_interface.c (task_set_up_interface.h)
    Non-Blocking Code
    
-  task_normal.c (task_normal.h, task_normal_attribute.h) 
+  task_normal.c (task_normal.h, task_normal_attribute.h, task_shared_attributes.h) 
    Non-Blocking Code -> Normal Mode Modeling
   
   task_normal_interface.c (task_normal_interface.h)

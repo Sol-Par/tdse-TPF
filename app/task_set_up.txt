@@ -1,0 +1,109 @@
+task_set_up.c
+
+Subprograma que se encarga de cambiar los parametros wait_time y stay_time.
+
+Wait_time: Tiempo de espera para cerrar la puerta despues de abrirse.
+Stay_time: Tiempo extra de espera si alguien se queda bajo la puerta.
+
+Se utilizan dos funciones principales para el subprograma:
+ task_set_up_init (void *parameters):
+Se encarga de iniciar el programa iniciando el display con la funcion displayInit que recibe DISPLAY_CONNECTION_GPIO_4BITS que es la configuracion de comunicacion de 4 bits del display. Al mismo tiempo se definen las posiciones de escritura con displayCharPositionWrite y se escribe el menu principal con displayStringWrite, mostrando: ">Normal  Set_up".
+
+void task_set_up_update(void *parameters):
+Se encarga de actualizar el display y los parametros a configurar al pulsar los botones SELECT y CONFIG utilizando un Switch para ir cambiando entre los distintos estados configurados, dependiendo del evento que ocurra al pulsar los botones.
+
+Los estados son los siguientes:
+ST_SYS_01_IDLE: Estado inicial de espera a que ocurra una accion (se pulse un boton).
+
+EV_SYS_01_SELECT (pulsar el boton select): Si la flag set_up_mode == true (si el modo set_up esta activado), se pasa esta flag a false, se mueve el simbolo ">" a "Normal" en el display y se vuelve al modo normal.
+
+EV_SYS_01_CONFIG (pulsar el boton config) : Si la flag set_up_mode == true se cambia el estado a ST_SYS_01_MENU (se entra al menu de Set_Up) y se muestra por display con sus respectivas funciones en la linea 1 " >Ent  Nex  Esc " y en la linea 2: " >Wait    Stay  ".
+
+ST_SYS_01_MENU:
+
+EV_SYS_01_SELECT: se mueve el simbolo ">" en el texto iniciado al entrar al menu sobre la linea 1, cambiandose entre "Ent" , "Nex" y "Esc".
+
+EV_SYS_01_CONFIG: Se selecciona una de las opciones mostradas en la linea 1, las cuales se guardan p_task_set_up_dta -> select, que puede valer 0, 1 o 2 dependiendo de si esta en enter, next o escape.
+
+si vale 0: Se cambia ST_SYS_01_PARAMS 
+si vale 1: Se mueve el simbolo ">" entre las opciones de la linea 2 del display
+si vale 2: Se vuelve a ST_SYS_01_IDLE y se muestra por display lo que se mostraba en la inicializacion.
+
+
+ST_SYS_01_PARAMS:
+
+Se realiza un Switch sobre p_task_set_up_dta -> submenu que puede vale 0 o 1.
+si vale 0: Se cambia el estado a ST_SYS_01_WAIT_TIME y se configura p_task_set_up_dta -> index = (wait_time / 10000); siendo wait_time el tiempo configurado.
+si vale 1: Se cambia el estado a ST_SYS_01_STAY_TIME y se configura p_task_set_up_dta -> index = (stay_time / 10000);
+
+ST_SYS_01_WAIT_TIME:
+
+EV_SYS_01_SELECT: Se mueve el simbolo ">" entre las opciones de la linea 1 del display
+
+EV_SYS_01_CONFIG: De nuevo se tienen 3 casos sobre los cuales se realiza un Switch a p_task_set_up_dta -> select
+si vale 0: wait_time = (p_task_set_up_dta -> index) * 10000 (Se multiplica por 10000 porque son ticks). Luego se muestra por consola el tiempo de espera configurado a partir del index y por consola se muestran las dos lineas originales al entrar al modo Set_up.
+
+si vale 1: Se va aumentando +1 al p_task_set_up_dta -> index y se limita entre 1 y 10 este aumento.
+
+si vale 2: Se cambia el estado a ST_SYS_01_MENU y se muestra pos display las lineas originales al entrar al modo Set_up.
+
+ST_SYS_01_STAY_TIME: Igual al estado del wait_time pero modificando el stay_time.
+
+task_set_up_attributes.h
+Estructura de Estados para task_set_up.c
+
+task_set_up_st_t:Enumerador para cada uno de los estados del sistema:
+
+{
+ST_SYS_01_IDLE,
+ST_SYS_01_MENU,
+ST_SYS_01_PARAMS,
+ST_SYS_01_WAIT_TIME,
+ST_SYS_01_STAY_TIME
+}
+
+task_system_ev_t: Enumerador para cada uno de los eventos del sistema
+
+{
+EV_SYS_01_CONFIG = EV_SYS_XX_CONFIG,
+EV_SYS_01_SELECT = EV_SYS_XX_SELECT,
+NOEVENT_01 = NOEVENT,
+EV_SYS_01_IDLE
+}
+
+donde EV_SYS_XX_CONFIG, EV_SYS_XX_SELECT y NOEVENT son elementos del enum compartido entre sistema hallado en task_shared_attributes.h
+
+La estructura utilizada para la actualizacion de datos sobre task_set_up es:
+
+typedef struct
+{
+	task_set_up_st_t	state;
+	task_set_up_ev_t	event;
+	uint32_t		index;
+	uint32_t 		select;
+	uint32_t		submenu;
+	bool			flag;
+} task_set_up_dta_t;
+
+Los primeros dos elementos definen el estado y el evento, los cuales dependen de los botones pulsados, como se describio anteriormente. 
+index es el valor que se configura tanto para wait_time como para stay_time, dependiendo de cual se este configurando en el momento de ejecucion.
+El select tiene un valor entre 0 y 2 y define cual de las opciones se esta eligiendo al momento de pulsar el boton CONFIG.
+El submenu vale 0 o 1 y define si se esta seleccionando wait_time o stay_time
+Por ultimo, una flag que esta en true si hay un evento y en false si no queda ningun evento por procesar.
+
+
+set_up_interface.c
+
+Estructuras de datos
+queue_task_a: Estructura que define una pila con la cantidad de eventos del sistema. Contiene 3 enteros sin signo de 32 bits llamados head (primer elemento de la cola), tail (último elemento de la cola) y count (cuenta la cantidad de eventos en la pila). Se le suma +1 a head si se agrega algún elemento a la pila y se le reduce -1 a tail si se saca un elemento de la pila. Ademas se agrega un elemento del tipo task_set_up_event_t llamado queue que es la pila donde se guarda y se sacan los eventos.
+
+Funciones
+init_queue_event_task_set_up: Función que recibe un parámetro void y devuelve void. Se utiliza para inicializar la pila, iniciando head, tail y count a cero y agregando a la cantidad elegida de eventos (MAX_EVENTS) un NOEVENT, que significa que no hay ningún evento en esa posición de la pila al inicio.
+
+put_event_task_set_up: Función que recibe un parámetro del tipo task_set_up_ev_t y devuelve void. Esta función se encarga de agregar el elemento del tipo task_set_up_ev_t en el tope de la pila, aumentando el contador de la cantidad de eventos (count) y el contador de head en +1 luego de agregar el evento a la pila. Si el contador de head alcanza MAX_EVENTS éste se resetea a 0.
+
+get_event_task_set_up: Función que recibe un parámetro del tipo void y devuelve un parámetro del tipo task_set_up_ev_t. Se encarga de sacar los elementos de la cola de la pila, restando -1 al contador de cantidad de eventos (count), obteniendo el evento de la cola y agregando en esta posición un NOEVENT , luego aumenta +1 al contador de la cola (tail). Si el contador de tail alcanza MAX_EVENTS éste se resetea a 0.
+
+any_event_task_set_up: Función que recibe un parámetro del tipo void y devuelve un parámetro booleano. Indica si hay algún evento por procesar en la pila comparando los valores de los contadores head y tail. Devuelve true si head != tail.
+
+
