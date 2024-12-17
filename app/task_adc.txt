@@ -1,0 +1,13 @@
+funciones: 
+
+void task_adc_init(uint16_t* parameters): inicializa el adc 
+
+void task_adc_update(uint16_t* parameters): llama a test3_tick(), función booleana que indica la finalización del test si devuelve true.
+
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc): Es una función de callback que se ejecuta automáticamente cuando el ADC completa una conversión en el microcontrolador STM32,  almacenando cada muestra en un arreglo.
+
+bool test3_tick(): si hay suficientes muestras setea la flag en true y b_done en true. En la primera conversión, llama a HAL_ADC_Start_IT() para iniciar la conversión en modo interrupción, promedia las muestras cuando se completan las conversiones, las muestra en pantalla y devuelve b_done.
+
+
+
+

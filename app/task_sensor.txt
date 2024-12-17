@@ -1,0 +1,36 @@
+task_sensor_attribute.h:
+
+Estructuras de datos:
+
+Se tienen 3 enumeradores:
+task_sensor_ev_t: Enumera los eventos del sensor.
+task_sensor_st_t: Enumera los estados del sensor.
+task_sensor_id_t: Enumera cada uno de los sensores utilizados.
+
+task_sensor_cfg_t: Estructura que contiene la configuración del sensor. Contiene los siguientes elementos:
+
+task_sensor_id_t identifier: Identificador del enumerador para el sensor.
+GPIO_TypeDef * gpio_port: Define el puerto utilizado para el pin en la placa.
+uint16_t pin: Es el número de pin utilizado.
+GPIO_PinState pressed: Se utiliza para realizar una lectura del pin a través de la estructura HAL_GPIO_ReadPin.
+uint32_t tick_max: La máxima cantidad de ticks que se configura para que se realice un cambio del estado del sensor (de UP a DOWN).
+task_sensor_ev_t button_up: Aca se almacena el evento configurado para el sensor cuando no está pulsado.
+task_sensor_ev_t button_down: Acá se almacena el evento configurado para el sensor cuando está pulsado.
+
+task_sensor_dta_t: Estructura de datos del sensor. Contiene los siguientes elementos:
+
+uint32_t tick: Acá se almacena el tick configurado en la estructura anterior.
+task_sensor_st_t state: se almacena el estado actual del sensor.
+task_sensor_ev_t event: se almacena el evento actual del sensor.
+
+----------------
+
+task_sensor.c:
+
+Se definen dos listas iniciales:
+task_sensor_cfg_t task_sensor_cfg_list: Contiene la configuración inicial del sensor.
+task_sensor_dta_t task_sensor_dta_list: Contiene los datos iniciales del sensor.
+
+Funciones:
+task_sensor_init: Funcion que recibe void *parameters y devuelve void. En esta se inicializa el estado y el evento del sensor y a su vez un puntero que apunta a la lista de datos definida anteriormente. También se inicializan los contadores que serviran para realizar los ciclos en la siguiente función.
+task_sensor_update: Función que recibe void*parameters y devuelve void. En esta función se se actualiza los datos del sensor, para esto se definen dos punteros: task_sensor_cfg_t *p_task_sensor_cfg y task_sensor_dta_t *p_task_sensor_dta. Además de un booleano b_time_update_required = false que cambiara de estado dependiendo del contador de tareas del sensor. Mientras este booleano sea verdadero se va a realizar un ciclo while que actualizará ambos punteros dependiendo de si el sensor está pulsado o no y de la cantidad de estados definidos para cada sensor (se realiza un switch de p_task_sensor_dta->state con tantos case como estados se hayan definido, en este caso los estados definidos para los sensores fueron ST_BTN_XX_UP, ST_BTN_XX_FALLING y ST_BTN_XX_DOWN.

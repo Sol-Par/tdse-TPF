@@ -1,0 +1,20 @@
+Estructuras:
+
+pcf8574_t : 
+
+Funciones:
+
+void displayInit( displayConnection_t connection): Con el tipo de conexion pasado por parametro, se pasan las instrucciónes de código necesarias para establecer la comunicación segun el tipo de conexion elegida.
+
+void displayCharPositionWrite(uint8_t charPositionX, uint8_t charPositionY): Se manda la instrucción al display para  poner el cursor en la posición indicada, partiendo por DISPLAY_16x2_LINE1_FIRST_CHARACTER_ADDRESS
+
+void displayStringWrite( const char * str ): llama a displayCodeWrite() por cada elemento del str pasado por parámetro.
+
+void displayCodeWrite(bool type, uint8_t dataBus) : si type == DISPLAY_RS_INSTRUCTION, se escribe en el pin una instrucción, sino se escribe en el pin que se va a enviar datos. Se pone el pin en modo escritura y se envía el bus de datos.
+
+static void displayPinWrite( uint8_t pinName, int value ): Dependiendo del tipo de comunicación, se pasa a pinName el valor a escribir en ese pin llamando a HAL_GPIO_WritePin().
+
+static void displayDataBusWrite( uint8_t dataBus ): se pone en Disable en pin EN, se llama a displayPinWrite para los primeros 4 bits del dataBus y, segun el tipo de conexion, se escribe el resto de los bits (si es conexion de  bits o I2C). Luego se pone en enable el pin EN y despues en disable.
+
+void displayClean(uint8_t line): para una linea dada, escribe un espacio vacio para limpiar el display.
+

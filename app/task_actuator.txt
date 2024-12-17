@@ -1,0 +1,35 @@
+Estructuras de datos:
+
+Se tienen 3 enumeradores:
+task_actuador_ev_t: Enumera los eventos del actuador.
+task_actuador_st_t: Enumera los estados del actuador.
+task_actuator_id_t: Enumera cada uno de los actuadores utilizados.
+
+task_actuador_cfg_t: Estructura que contiene la configuración del actuador. Contiene los siguientes elementos:
+
+task_actuator_id_t identifier: Identificador del enumerador para el actuador.
+GPIO_TypeDef * gpio_port: Define el puerto utilizado para el pin en la placa.
+uint16_t pin: Es el número de pin utilizado.
+GPIO_PinState led_on: Se utiliza para usar la enumeración bitSET
+GPIO_PinState led_off: Se utiliza para usar la enumeración bitRESET
+uint32_t tick_blink: La máxima cantidad de ticks que se configura para que un led haga blink.
+uint32_t tick_pulse: la máima cantidad de ticks para que un led haga pulsos.
+
+task_actuador_dta_t: Estructura de datos del actuador. Contiene los siguientes elementos:
+
+uint32_t tick: Acá se almacena el tick configurado en la estructura anterior.
+task_actuador_st_t state: se almacena el estado actual del actuador.
+task_actuador_ev_t event: se almacena el evento actual del actuador.
+bool flag: Se utiliza para definir si el actuador está siendo pulsado por primera vez en el ciclo del sistema o por segunda vez.
+
+----------------
+
+task_actuador.c:
+
+Se definen dos listas iniciales:
+task_actuator_cfg_t task_actuator_cfg_list: Contiene la configuración inicial del actuador.
+task_actuator_dta_t task_actuator_dta_list: Contiene los datos iniciales del actuador.
+
+Funciones:
+task_actuator_init: Funcion que recibe void *parameters y devuelve void. En esta se inicializa el estado y el evento del acatuador y a su vez un puntero que apunta a la lista de datos definida anteriormente. También se inicializan los contadores que serviran para realizar los ciclos en la siguiente función.
+task_actuator_update: Función que recibe void*parameters y devuelve void. En esta función se se actualiza los datos del actuador, para esto se definen dos punteros: task_actuador_cfg_t *p_task_actuador_cfg y task_actuador_dta_t *p_task_actuador_dta. Además de un booleano b_time_update_required = false que cambiara de estado dependiendo del contador de tareas del actuador. Mientras este booleano sea verdadero se va a realizar un ciclo while que actualizará ambos punteros dependiendo de si el actuador está pulsado o no y de la cantidad de estados definidos para cada actuador (se realiza un switch de p_task_actuador_dta->state con tantos case como estados se hayan definido, en este caso los estados definidos para los actuadores fueron ST_BTN_XX_UP, ST_BTN_XX_FALLING y ST_BTN_XX_DOWN.

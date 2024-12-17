@@ -1,0 +1,4 @@
+funciones:
+
+void put_event_task_actuator(task_actuator_ev_t event, task_actuator_id_t identifier): a un elemento en posición identifier de la lista task_actuator_dta_listm le asigna el event pasado por parámetro y setea su flag en true. 
+

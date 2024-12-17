@@ -1,5 +1,4 @@
-Example: tdse-tp2_01-model_integration
-
+Example: tdse-tpf
  Description:
  Bare Metal - Event-Triggered Systems (ETS)
  App - retarget_printf_to_Console
@@ -12,12 +11,21 @@ Example: tdse-tp2_01-model_integration
    Endless loops, which execute tasks with fixed computing time. This 
    sequential execution is only deviated from when an interrupt event occurs.
 
-  task_system.c (task_system.h, task_system_attribute.h) 
-   Non-Blocking Code -> System Modeling
+  display.c (display.h) 
+   Utilities for LCD display managment.
+
+  task_set_up.c (task_set_up.h, task_set_up_attribute.h) 
+   Non-Blocking Code -> Set_Up Mode Modeling
   
-  task_system_interface.c (task_system_interface.h)
+  task_set_up_interface.c (task_set_up_interface.h)
    Non-Blocking Code
    
+  task_normal.c (task_normal.h, task_normal_attribute.h) 
+   Non-Blocking Code -> Normal Mode Modeling
+  
+  task_normal_interface.c (task_normal_interface.h)
+   Non-Blocking Code
+
   task_actuator.c (task_actuator.h, task_actuator_attribute.h) 
    Non-Blocking & Update By Time Code -> Actuator Modeling
 
@@ -26,8 +34,11 @@ Example: tdse-tp2_01-model_integration
 
   task_sensor.c (task_sensor.h, task_sensor_attribute.h) 
    Non-Blocking & Update By Time Code -> Sensor Modeling
+
+  task_temperature.c (task_temperature.h) 
+   Non-Blocking Code -> Temperature Measuring Modeling
   
-  logger.h (logger.c)
+  logger.c (logger.h)
    Utilities for Retarget "printf" to Console
 
   dwt.h

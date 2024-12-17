@@ -1,0 +1,23 @@
+Estructuras de datos:
+
+task_cfg_t: Estructura de configuración, contiene dos punteros a function void con parametros (void *) llamados task_init y task_update y un puntero a void llamado parameters.
+
+task_init: Este puntero a función apunta hacia la tarea que se quiere inicializar, como por ejemplo la función task_sensor_init de task_sensor.c, que inicializa los sensores que se vayan a utilizar en el sistema.
+task_update: Este también es un puntero a función como el anterior, pero en este caso se quiere actualizar las tareas que ya fueron inicializadas anteriormente. Por ejemplo, la funcion task_sensor_update de task_sensor.c es la que actualiza los estados y los contadores utilizados en cada uno de los sensores disponibles, dependiendo de las acciones externas del sistema o del usuario (pulsar o soltar un botón).
+parameters: Puntero a los parámetros que se quieran agregar en la configuración.
+
+task_dta_t: Esta estructura contiene un único elemento, un entero sin signo de 32 bits que se llama WCET (worst case execution time), el cual especifica el peor tiempo de ejecución de cada tarea.
+
+Listas:
+
+task_cfg_t task_cfg_list: Esta lista de elementos de task_cfg_t especifica la cantidad de tareas que se quieren ejecutar al inicializar app.c. En nuestro caso son 4 tareas correspondientes a sensor, set up, normal y actuador. 
+
+De la cantidad de tareas agregadas a la lista se obtiene TASK_QTY definido como (sizeof(task_cfg_list)/sizeof(task_cfg_t)).
+
+task_dta_t task_dta_list[TASK_QTY]: Esta lista contiene los WCET de cada una de las tareas. Se inicializa a TASK_X_WCET_INI, que se define al principio de app.c.
+
+Funciones:
+
+app_init: Función que inicializa app.c en el main. Es una función devuelve void y recibe  void. Primero se imprime en consola con la función LOGGER_LOG para indicar que la aplicación está inicializada y los contadores están funcionando. Se realiza un ciclo para iniciar las tareas dentro de la lista task_cfg_t task_cfg_list y se inicializan los tiempos dentro de la lista task_dta_t task_dta_list.
+
+app_update: Función que actualiza las tareas inicializadas en app_init realizando un ciclo en la lista task_cfg_t task_cfg_list sobre los .task_update de cada una de las tareas definidas. Se define el contador cycle_counter_time_us y se compara con el WCET de cada una de las tareas y si es mayor, se hace task_dta_list[index].WCET = cycle_counter_time_us, siendo index la tarea que se está analizando en la lista en dicho instante. Recibe void y devuelve void.
