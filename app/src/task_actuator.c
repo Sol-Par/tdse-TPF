@@ -82,8 +82,6 @@ task_actuator_dta_t task_actuator_dta_list[] = {
 /********************** internal functions declaration ***********************/
 
 /********************** internal data definition *****************************/
-const char *p_task_actuator 		= "Task Actuator (Actuator Statechart)";
-const char *p_task_actuator_ 		= "Non-Blocking & Update By Time Code";
 
 /********************** external data declaration ****************************/
 uint32_t g_task_actuator_cnt;
@@ -94,37 +92,13 @@ void task_actuator_init(void *parameters)
 {
 	uint32_t index;
 	const task_actuator_cfg_t *p_task_actuator_cfg;
-	task_actuator_dta_t *p_task_actuator_dta;
-	task_actuator_st_t state;
-	task_actuator_ev_t event;
-	bool b_event;
-
-	/* Print out: Task Initialized */
-	LOGGER_LOG("  %s is running - %s\r\n", GET_NAME(task_actuator_init), p_task_actuator);
-	LOGGER_LOG("  %s is a %s\r\n", GET_NAME(task_actuator), p_task_actuator_);
 
 	g_task_actuator_cnt = G_TASK_ACT_CNT_INIT;
-
-	/* Print out: Task execution counter */
-	LOGGER_LOG("   %s = %lu\r\n", GET_NAME(g_task_actuator_cnt), g_task_actuator_cnt);
 
 	for (index = 0; ACTUATOR_DTA_QTY > index; index++)
 	{
 		/* Update Task Actuator Configuration & Data Pointer */
 		p_task_actuator_cfg = &task_actuator_cfg_list[index];
-		p_task_actuator_dta = &task_actuator_dta_list[index];
-
-		/* Print out: Index & Task execution FSM */
-		LOGGER_LOG("   %s = %lu", GET_NAME(index), index);
-
-		state = p_task_actuator_dta->state;
-		LOGGER_LOG("   %s = %lu", GET_NAME(state), (uint32_t)state);
-
-		event = p_task_actuator_dta->event;
-		LOGGER_LOG("   %s = %lu", GET_NAME(event), (uint32_t)event);
-
-		b_event = p_task_actuator_dta->flag;
-		LOGGER_LOG("   %s = %s\r\n", GET_NAME(b_event), (b_event ? "true" : "false"));
 
 		HAL_GPIO_WritePin(p_task_actuator_cfg->gpio_port, p_task_actuator_cfg->pin, p_task_actuator_cfg->led_off);
 	}

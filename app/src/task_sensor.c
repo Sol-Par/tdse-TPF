@@ -63,7 +63,7 @@
 
 /********************** internal data declaration ****************************/
 
-bool set_up_mode = true;
+bool set_up_mode = false;
 
 const task_sensor_cfg_t task_sensor_cfg_list[] = {
 	{ID_SNS_CONFIG,		SNS_CONFIG_PORT,  	SNS_CONFIG_PIN, 	SNS_CONFIG_PRESSED, 	DEL_SNS_XX_MIN,	EV_SYS_XX_CONFIG,	NOEVENT},
@@ -102,34 +102,8 @@ volatile uint32_t g_task_sensor_tick_cnt;
 /********************** external functions definition ************************/
 void task_sensor_init(void *parameters)
 {
-	uint32_t index;
-	task_sensor_dta_t *p_task_sensor_dta;
-	task_sensor_st_t state;
-	task_sensor_ev_t event;
-
-	/* Print out: Task Initialized */
-	LOGGER_LOG("  %s is running - %s\r\n", GET_NAME(task_sensor_init), p_task_sensor);
-	LOGGER_LOG("  %s is a %s\r\n", GET_NAME(task_sensor), p_task_sensor_);
-
 	g_task_sensor_cnt = G_TASK_SEN_CNT_INIT;
 
-	/* Print out: Task execution counter */
-	LOGGER_LOG("   %s = %lu\r\n", GET_NAME(g_task_sensor_cnt), g_task_sensor_cnt);
-
-	for (index = 0; SENSOR_DTA_QTY > index; index++)
-	{
-		/* Update Task Sensor Data Pointer */
-		p_task_sensor_dta = &task_sensor_dta_list[index];
-
-		/* Print out: Index & Task execution FSM */
-		LOGGER_LOG("   %s = %lu", GET_NAME(index), index);
-
-		state = p_task_sensor_dta->state;
-		LOGGER_LOG("   %s = %lu", GET_NAME(state), (uint32_t)state);
-
-		event = p_task_sensor_dta->event;
-		LOGGER_LOG("   %s = %lu\r\n", GET_NAME(event), (uint32_t)event);
-	}
 	g_task_sensor_tick_cnt = G_TASK_SEN_TICK_CNT_INI;
 }
 
@@ -176,7 +150,6 @@ void task_sensor_update(void *parameters)
 			if (p_task_sensor_cfg->pressed == HAL_GPIO_ReadPin(p_task_sensor_cfg->gpio_port, p_task_sensor_cfg->pin))
 			{
 				p_task_sensor_dta->event =	EV_SNS_XX_DOWN;
-				//LOGGER_LOG("Apretado\n");
 			}
 			else
 			{

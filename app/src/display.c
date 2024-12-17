@@ -343,10 +343,10 @@ static void displayDataBusWrite( uint8_t dataBus )
 }
 
 void displayClean(uint8_t line){
-	for(uint32_t i = 0; i < 16; i++){
-		displayCharPositionWrite(i,line);
-		displayStringWrite(" ");
-	}
+
+	displayCharPositionWrite(0,line);
+	displayStringWrite("                ");
+
 }
 /********************** end of file ******************************************/
 

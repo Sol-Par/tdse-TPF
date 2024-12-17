@@ -46,120 +46,136 @@
 /* Application & Tasks includes. */
 #include "board.h"
 #include "app.h"
+#include "task_temperature.h"
 
 /********************** macros and definitions *******************************/
 //#define AVERAGER_SIZE (100)
-#define AVERAGER_SIZE (8)
+#define AVERAGER_SIZE (32)
 
 #define TEST_NUMBER (3)
 
 /********************** internal data declaration ****************************/
 uint32_t tickstart;
-uint16_t sample_idx;
 
-uint16_t sample_array[AVERAGER_SIZE];
-uint16_t promedio;
-uint16_t aux;
-bool b_trig_new_conversion;
+uint32_t sample_id_1;
+uint32_t sample_id_2;
+
+uint32_t sample_array_1[AVERAGER_SIZE];
+uint32_t sample_array_2[AVERAGER_SIZE];
+
+uint32_t aux;
+
+uint32_t inner_temp;
+uint32_t promedio;
+
+
+bool b_trig_new_conversion_1;
+bool b_trig_new_conversion_2;
 /********************** internal functions declaration ***********************/
 
 /********************** internal data definition *****************************/
-const char *p_task_adc 		= "Task ADC";
 
 /********************** external data declaration *****************************/
 
 extern ADC_HandleTypeDef hadc1;
+extern ADC_HandleTypeDef hadc2;
 
 
 /********************** external functions definition ************************/
 bool test3_tick();
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc);
-HAL_StatusTypeDef ADC_Poll_Read(uint16_t *value);
 
-void task_adc_init(uint16_t* parameters)
+void task_temperature_init(void *parameters)
 {
 	HAL_NVIC_SetPriority(ADC1_2_IRQn, 2, 0);
 	HAL_NVIC_EnableIRQ(ADC1_2_IRQn);
 
-	sample_idx = 0;
+	sample_id_2 = 0;
 	tickstart = HAL_GetTick();
-
-	/* Print out: Task Initialized */
-	LOGGER_LOG("  %s is running - %s\r\n", GET_NAME(task_adc_init), p_task_adc);
-
 }
 
-void task_adc_update(uint16_t* parameters)
+void task_temperature_update(void *parameters)
 {
 // a checkear el static
 	bool b_test_done = false;
 
 	if (!b_test_done) {
-
-
 		b_test_done = test3_tick();
-
-
-
-		if (b_test_done) {
-			LOGGER_LOG("Test #%u ends. Ticks: %lu\n", TEST_NUMBER, (HAL_GetTick()-tickstart));
-		}
 	}
 }
 
-HAL_StatusTypeDef ADC_Poll_Read(uint16_t *value) {
-	HAL_StatusTypeDef res;
-
-	res=HAL_ADC_Start(&hadc1);
-	if ( HAL_OK==res ) {
-		res=HAL_ADC_PollForConversion(&hadc1, 0);
-		if ( HAL_OK==res ) {
-			*value = HAL_ADC_GetValue(&hadc1);
-		}
-	}
-	return res;
-}
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
 
-	sample_array[sample_idx++] = HAL_ADC_GetValue(&hadc1);
-	if (sample_idx<AVERAGER_SIZE) {
-		b_trig_new_conversion = true;
+	sample_array_1[sample_id_1++] = HAL_ADC_GetValue(&hadc1);
+	if (sample_id_1<AVERAGER_SIZE) {
+		b_trig_new_conversion_1 = true;
+	}
+
+	sample_array_2[sample_id_2++] = HAL_ADC_GetValue(&hadc2);
+	if (sample_id_2<AVERAGER_SIZE) {
+		b_trig_new_conversion_2 = true;
 	}
 }
 
 bool test3_tick() {
 
 	bool b_done = false;
-	bool flag = false;
+	bool flag1 = false;
+	bool flag2 = false;
 
-	if (sample_idx>=AVERAGER_SIZE) {
+	if (sample_id_1>=AVERAGER_SIZE && sample_id_2 >= AVERAGER_SIZE) {
 		b_done = true;
-		flag = true;
+		flag1 = true;
+		flag2 = true;
 	}
 
 	/* start of first conversion */
-	if (0==sample_idx && flag == false) {
-		b_trig_new_conversion = true;
+	if (0==sample_id_1 && flag1 == false) {
+		b_trig_new_conversion_1 = true;
 	}
 
-
-	if (b_trig_new_conversion && flag == false) {
-		b_trig_new_conversion = false;
-	
+	if (b_trig_new_conversion_1 && flag1 == false) {
+		b_trig_new_conversion_1 = false;
 		HAL_ADC_Start_IT(&hadc1);
 	}
 
-	if (b_done  && flag == true) {
+	if (0==sample_id_2 && flag2 == false) {
+		b_trig_new_conversion_2 = true;
+	}
+
+	if (b_trig_new_conversion_2 && flag2 == false) {
+		b_trig_new_conversion_2 = false;
+		HAL_ADC_Start_IT(&hadc2);
+	}
+
+	if (b_done  && flag1 == true && flag2 == true) {
+
 		aux = 0;
-		for (sample_idx=0;sample_idx<AVERAGER_SIZE;sample_idx++) {
-			promedio = 0;
-			LOGGER_LOG("%u\n",sample_array[sample_idx] );
-			aux = aux + sample_array[sample_idx];
+		inner_temp = 0;
+
+		for (sample_id_1=0;sample_id_1<AVERAGER_SIZE;sample_id_1++) {
+			aux = aux + sample_array_1[sample_id_1];
 		}
+
+		inner_temp = aux/AVERAGER_SIZE;
+
+		inner_temp = (3.30 * (float)inner_temp)/(4096);
+
+		inner_temp = 25 + ((1.43 - (float)inner_temp) / 4.3) ;
+
+		sample_id_1 = 0;
+
+		aux = 0;
+		promedio = 0;
+
+		for (sample_id_2=0;sample_id_2<AVERAGER_SIZE;sample_id_2++) {
+			aux = aux + sample_array_2[sample_id_2];
+		}
+
 		promedio = aux/AVERAGER_SIZE;
-		LOGGER_LOG("Promedio: %u\n",promedio);
-		sample_idx = 0;
+		promedio = (3.30 * 100 * (float)promedio)/(4096);
+		sample_id_2 = 0;
 	}
 	return b_done;
 }

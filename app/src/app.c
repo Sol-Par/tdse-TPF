@@ -49,6 +49,7 @@
 #include "task_normal.h"
 #include "task_actuator.h"
 #include "task_sensor.h"
+#include "task_temperature.h"
 
 /********************** macros and definitions *******************************/
 #define G_APP_CNT_INI		0ul
@@ -71,10 +72,11 @@ typedef struct {
 
 /********************** internal data declaration ****************************/
 task_cfg_t task_cfg_list[]	= {
-		{task_sensor_init, 		task_sensor_update, 	NULL},
-		{task_set_up_init, 		task_set_up_update, 	NULL},
-		{task_normal_init, 		task_normal_update, 	NULL},
-		{task_actuator_init,	task_actuator_update, 	NULL}
+		{task_sensor_init, 		task_sensor_update, 		NULL},
+		{task_set_up_init, 		task_set_up_update, 		NULL},
+		{task_temperature_init, task_temperature_update,	NULL},
+		{task_normal_init, 		task_normal_update,			NULL},
+		{task_actuator_init,	task_actuator_update, 		NULL}
 };
 
 #define TASK_QTY	(sizeof(task_cfg_list)/sizeof(task_cfg_t))
@@ -84,6 +86,8 @@ task_cfg_t task_cfg_list[]	= {
 /********************** internal data definition *****************************/
 const char *p_sys	= " Bare Metal - Event-Triggered Systems (ETS)\r\n";
 const char *p_app	= " App - Model Integration\r\n";
+
+double C_task_total;
 
 /********************** external data declaration ****************************/
 uint32_t g_app_cnt;
@@ -98,17 +102,7 @@ void app_init(void)
 {
 	uint32_t index;
 
-	/* Print out: Application Initialized */
-	LOGGER_LOG("\r\n");
-	LOGGER_LOG("%s is running - Tick [mS] = %d\r\n", GET_NAME(app_init), (int)HAL_GetTick());
-
-	LOGGER_LOG(p_sys);
-	LOGGER_LOG(p_app);
-
 	g_app_cnt = G_APP_CNT_INI;
-
-	/* Print out: Application execution counter */
-	LOGGER_LOG(" %s = %d\r\n", GET_NAME(g_app_cnt), (int)g_app_cnt);
 
 	/* Go through the task arrays */
 	for (index = 0; TASK_QTY > index; index++)
@@ -156,12 +150,33 @@ void app_update(void)
 			if (task_dta_list[index].WCET < cycle_counter_time_us)
 			{
 				task_dta_list[index].WCET = cycle_counter_time_us;
+
+				uint32_t index2;
+				uint32_t aux = 0;
+
+				/* Go through the task arrays */
+				for (index2 = 0; TASK_QTY > index2; index2++)
+				{
+					aux = aux + task_dta_list[index2].WCET;
+					LOGGER_LOG("Task:%ld -> WCET = %ld\n", index2, task_dta_list[index2].WCET);
+				}
+
+				if(aux > C_task_total){
+					C_task_total = aux;
+				}
+
+				if(C_task_total > 1000000){
+					LOGGER_LOG("Factor de uso del CPU > 1!")
+				}
 			}
+
+
 
 			//LOGGER_LOG("Item: %ld \t Tiempo: %ld \n", index, task_dta_list[index].WCET);
 	    }
     }
 }
+
 
 void HAL_SYSTICK_Callback(void)
 {

@@ -68,10 +68,11 @@ task_normal_dta_t task_normal_dta ={0, ST_SYS_02_IDLE, EV_SYS_02_IDLE, false, fa
 /********************** internal functions declaration ***********************/
 
 /********************** internal data definition *****************************/
-const char *p_task_normal 		= "Task System (System Statechart)";
-const char *p_task_normal_ 		= "Non-Blocking & Update By Time Code";
 bool timer = false;
+bool show_temperature = false;
 
+uint32_t temp_interna = 0;
+uint32_t temp_externa = 0;
 
 /********************** external data declaration ****************************/
 uint32_t g_task_normal_cnt;
@@ -80,42 +81,14 @@ volatile uint32_t g_task_normal_tick_cnt;
 /********************** external functions definition ************************/
 void task_normal_init(void *parameters)
 {
-	task_normal_dta_t 	*p_task_normal_dta;
-	task_normal_st_t	state;
-	task_normal_ev_t	event;
-	bool b_event;
-
-	/* Print out: Task Initialized */
-	LOGGER_LOG("  %s is running - %s\r\n", GET_NAME(task_normal_init), p_task_normal);
-	LOGGER_LOG("  %s is a %s\r\n", GET_NAME(task_normal), p_task_normal_);
-
-	g_task_normal_cnt = G_TASK_SYS_CNT_INI;
-
-	/* Print out: Task execution counter */
-	LOGGER_LOG("   %s = %lu\r\n", GET_NAME(g_task_normal_cnt), g_task_normal_cnt);
-
 	init_queue_event_task_normal();
-
-	p_task_normal_dta = &task_normal_dta;
-
-	/* Print out: Task execution FSM */
-	state = p_task_normal_dta->state;
-	LOGGER_LOG("   %s = %lu", GET_NAME(state), (uint32_t)state);
-
-	event = p_task_normal_dta->event;
-	LOGGER_LOG("   %s = %lu", GET_NAME(event), (uint32_t)event);
-
-	b_event = p_task_normal_dta->flag;
-	LOGGER_LOG("   %s = %s\r\n", GET_NAME(b_event), (b_event ? "true" : "false"));
-
-	g_task_normal_tick_cnt = G_TASK_SYS_TICK_CNT_INI;
-
 }
 
 void task_normal_update(void *parameters)
 {
 	task_normal_dta_t *p_task_normal_dta;
 	bool b_time_update_required = false;
+	char str[20];
 	/* Update Task System Counter */
 	g_task_normal_cnt++;
 
@@ -160,6 +133,29 @@ void task_normal_update(void *parameters)
 			}
 		}
 
+
+		if(show_temperature == true){
+
+			if(temp_interna != inner_temp){
+
+				temp_interna = inner_temp;
+
+				displayCharPositionWrite(11, 0);
+				snprintf(str, sizeof(str), "%ld C", temp_interna);
+				displayStringWrite(str);
+			}
+
+			if(temp_externa != promedio){
+
+				temp_externa = promedio;
+
+				displayCharPositionWrite(11, 1);
+				snprintf(str, sizeof(str), "%ld C", temp_externa);
+				displayStringWrite(str);
+			}
+
+		}
+
 		if(p_task_normal_dta->flag == false && timer == false){
 			return;
 		}
@@ -170,30 +166,32 @@ void task_normal_update(void *parameters)
 			case ST_SYS_02_IDLE:
 
 				if(p_task_normal_dta->event == EV_SYS_02_SELECT && set_up_mode == false){
-					displayCharPositionWrite(p_task_normal_dta->select*9, 0);
+					displayCharPositionWrite(0, 0);
 					displayStringWrite(" ");
-					p_task_normal_dta->select = (((p_task_normal_dta->select) + 1) % 2);
-					displayCharPositionWrite(p_task_normal_dta->select*9, 0);
+					displayCharPositionWrite(9, 0);
 					displayStringWrite(">");
+					set_up_mode = true;
 				}
 
 				if(p_task_normal_dta->event == EV_SYS_02_CONFIG && set_up_mode == false){
 
-					switch (p_task_normal_dta -> select){
+					put_event_task_actuator(EV_ACT_XX_ON, ID_ACT_05);
 
-						case 0:
+					displayCharPositionWrite(0, 0);
+					snprintf(str, sizeof(str), "T.Interna: %ld C", temp_interna);
+					displayStringWrite(str);
+					displayCharPositionWrite(14, 0);
+					displayStringWrite("  ");
+					show_temperature = true;
 
-							put_event_task_actuator(EV_ACT_XX_ON, ID_ACT_05);
-							displayClean(0);
-							displayClean(1);
-							p_task_normal_dta->state = ST_SYS_02_CLOSED;
-							LOGGER_LOG("Normal - Closed\n");
+					displayCharPositionWrite(0, 1);
+					snprintf(str, sizeof(str), "T.Externa: %ld C", temp_externa);
+					displayStringWrite(str);
+					displayCharPositionWrite(14, 1);
+					displayStringWrite("  ");
 
-							break;
+					p_task_normal_dta->state = ST_SYS_02_CLOSED;
 
-						case 1:
-							break;
-					}
 				}
 
 				break;
@@ -201,17 +199,15 @@ void task_normal_update(void *parameters)
 			case ST_SYS_02_CLOSED:
 
 				if(p_task_normal_dta->event == EV_SYS_02_CONFIG){
+
 					put_event_task_actuator(EV_ACT_XX_OFF, ID_ACT_05);
 					p_task_normal_dta->state = ST_SYS_02_IDLE;
 					p_task_normal_dta->select=0;
-					displayClean(0);
-					displayClean(1);
-				    displayCharPositionWrite(0,0);
-					displayStringWrite(">");
-					displayCharPositionWrite(1,0);
-					displayStringWrite("Normal");
-					displayCharPositionWrite(10,0);
-					displayStringWrite("Set_Up");
+
+					displayCharPositionWrite(0,0);
+					displayStringWrite(">Normal  Set_up");
+					displayCharPositionWrite(0,1);
+					displayStringWrite("                ");
 					set_up_mode = true;
 
 				}
@@ -233,14 +229,11 @@ void task_normal_update(void *parameters)
 					put_event_task_actuator(EV_ACT_XX_OFF, ID_ACT_04);
 					p_task_normal_dta->state = ST_SYS_02_IDLE;
 					p_task_normal_dta -> select = 0;
-					displayClean(0);
-					displayClean(1);
-				    displayCharPositionWrite(0,0);
-					displayStringWrite(">");
+
+					displayCharPositionWrite(0,0);
+					displayStringWrite(">Normal  Set_up");
 					displayCharPositionWrite(1,0);
-					displayStringWrite("Normal");
-					displayCharPositionWrite(10,0);
-					displayStringWrite("Set_Up");
+					displayStringWrite("                ");
 					set_up_mode = true;
 
 				}
@@ -253,7 +246,6 @@ void task_normal_update(void *parameters)
 				}
 
 				if(p_task_normal_dta->event == EV_SYS_02_OPEN){
-					LOGGER_LOG("Hola");
 					put_event_task_actuator(EV_ACT_XX_NOBLINK, ID_ACT_02);
 					p_task_normal_dta->tick = wait_time;
 					timer = true;
@@ -285,6 +277,7 @@ void task_normal_update(void *parameters)
 
 
 				if(p_task_normal_dta->event == EV_SYS_02_NODETECTED && p_task_normal_dta->alarm_on == true){
+					LOGGER_LOG("Te salvaste\n");
 					put_event_task_actuator(EV_ACT_XX_NOBLINK, ID_ACT_01);
 					p_task_normal_dta->alarm_on = false;
 					p_task_normal_dta->tick = wait_time;
@@ -298,6 +291,7 @@ void task_normal_update(void *parameters)
 				}
 
 				if(p_task_normal_dta->event == EV_SYS_02_NODETECTED && p_task_normal_dta->detected == true){
+					LOGGER_LOG("No detectado\n");
 					p_task_normal_dta->detected = false;
 					timer = true;
 				}
@@ -317,14 +311,11 @@ void task_normal_update(void *parameters)
 					put_event_task_actuator(EV_ACT_XX_OFF, ID_ACT_04);
 					p_task_normal_dta->state = ST_SYS_02_IDLE;
 					p_task_normal_dta -> select = 0;
-					displayClean(0);
-					displayClean(1);
-				    displayCharPositionWrite(0,0);
-					displayStringWrite(">");
+
+					displayCharPositionWrite(0,0);
+					displayStringWrite(">Normal  Set_up");
 					displayCharPositionWrite(1,0);
-					displayStringWrite("Normal");
-					displayCharPositionWrite(10,0);
-					displayStringWrite("Set_Up");
+					displayStringWrite("                ");
 					set_up_mode = true;
 
 				}
@@ -355,14 +346,11 @@ void task_normal_update(void *parameters)
 					put_event_task_actuator(EV_ACT_XX_OFF, ID_ACT_04);
 					p_task_normal_dta->state = ST_SYS_02_IDLE;
 					p_task_normal_dta -> select = 0;
-					displayClean(0);
-					displayClean(1);
-				    displayCharPositionWrite(0,0);
-					displayStringWrite(">");
+
+					displayCharPositionWrite(0,0);
+					displayStringWrite(">Normal  Set_up");
 					displayCharPositionWrite(1,0);
-					displayStringWrite("Normal");
-					displayCharPositionWrite(10,0);
-					displayStringWrite("Set_Up");
+					displayStringWrite("                ");
 					set_up_mode = true;
 
 				}

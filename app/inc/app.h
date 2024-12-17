@@ -62,9 +62,15 @@ extern volatile uint32_t g_app_tick_cnt;
 
 extern bool set_up_mode;
 
+extern bool show_temperature;
+
+extern uint32_t promedio;
+
+extern uint32_t inner_temp;
 /********************** external functions declaration ***********************/
 void app_init(void);
 void app_update(void);
+void app_end(void);
 
 /********************** End of CPP guard *************************************/
 #ifdef __cplusplus
