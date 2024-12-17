@@ -144,6 +144,8 @@ void app_update(void)
 			cycle_counter_time_us = cycle_counter_time_us();
 			//HAL_GPIO_TogglePin(LED_A_PORT, LED_A_PIN);
 
+
+			/* WCET */
 			/* Update variables */
 	    	g_app_time_us += cycle_counter_time_us;
 
@@ -154,11 +156,10 @@ void app_update(void)
 				uint32_t index2;
 				uint32_t aux = 0;
 
-				/* Go through the task arrays */
+				/* WCET */
 				for (index2 = 0; TASK_QTY > index2; index2++)
 				{
 					aux = aux + task_dta_list[index2].WCET;
-					LOGGER_LOG("Task:%ld -> WCET = %ld\n", index2, task_dta_list[index2].WCET);
 				}
 
 				if(aux > C_task_total){

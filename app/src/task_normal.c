@@ -140,7 +140,7 @@ void task_normal_update(void *parameters)
 
 				temp_interna = inner_temp;
 
-				displayCharPositionWrite(11, 0);
+				displayCharPositionWrite(12, 0);
 				snprintf(str, sizeof(str), "%ld C", temp_interna);
 				displayStringWrite(str);
 			}
@@ -149,7 +149,7 @@ void task_normal_update(void *parameters)
 
 				temp_externa = promedio;
 
-				displayCharPositionWrite(11, 1);
+				displayCharPositionWrite(12, 1);
 				snprintf(str, sizeof(str), "%ld C", temp_externa);
 				displayStringWrite(str);
 			}
@@ -178,17 +178,14 @@ void task_normal_update(void *parameters)
 					put_event_task_actuator(EV_ACT_XX_ON, ID_ACT_05);
 
 					displayCharPositionWrite(0, 0);
-					snprintf(str, sizeof(str), "T.Interna: %ld C", temp_interna);
+					snprintf(str, sizeof(str), " T.Interna: %ld C ", temp_interna);
 					displayStringWrite(str);
-					displayCharPositionWrite(14, 0);
-					displayStringWrite("  ");
+
 					show_temperature = true;
 
 					displayCharPositionWrite(0, 1);
-					snprintf(str, sizeof(str), "T.Externa: %ld C", temp_externa);
+					snprintf(str, sizeof(str), " T.Externa: %ld C ", temp_externa);
 					displayStringWrite(str);
-					displayCharPositionWrite(14, 1);
-					displayStringWrite("  ");
 
 					p_task_normal_dta->state = ST_SYS_02_CLOSED;
 
@@ -205,10 +202,10 @@ void task_normal_update(void *parameters)
 					p_task_normal_dta->select=0;
 
 					displayCharPositionWrite(0,0);
-					displayStringWrite(">Normal  Set_up");
+					displayStringWrite(">Normal   Set_up");
 					displayCharPositionWrite(0,1);
 					displayStringWrite("                ");
-					set_up_mode = true;
+					show_temperature = false;
 
 				}
 
@@ -231,10 +228,10 @@ void task_normal_update(void *parameters)
 					p_task_normal_dta -> select = 0;
 
 					displayCharPositionWrite(0,0);
-					displayStringWrite(">Normal  Set_up");
-					displayCharPositionWrite(1,0);
+					displayStringWrite(">Normal   Set_up");
+					displayCharPositionWrite(0,1);
 					displayStringWrite("                ");
-					set_up_mode = true;
+					show_temperature = false;
 
 				}
 
@@ -262,7 +259,6 @@ void task_normal_update(void *parameters)
 				}
 
 				if(p_task_normal_dta->tick == 0 && p_task_normal_dta -> detected == true && p_task_normal_dta -> alarm_on == false){
-					LOGGER_LOG("Alarma\n");
 					put_event_task_actuator(EV_ACT_XX_BLINK, ID_ACT_01);
 					p_task_normal_dta->alarm_on = true;
 					p_task_normal_dta->tick = stay_time;
@@ -270,14 +266,12 @@ void task_normal_update(void *parameters)
 				}
 
 				if(p_task_normal_dta->tick == 0 && p_task_normal_dta -> detected == true && p_task_normal_dta -> alarm_on == true){
-					LOGGER_LOG("Te moriste\n");
 					put_event_task_actuator(EV_ACT_XX_NOBLINK, ID_ACT_01);
 					put_event_task_actuator(EV_ACT_XX_ON, ID_ACT_01);
 				}
 
 
 				if(p_task_normal_dta->event == EV_SYS_02_NODETECTED && p_task_normal_dta->alarm_on == true){
-					LOGGER_LOG("Te salvaste\n");
 					put_event_task_actuator(EV_ACT_XX_NOBLINK, ID_ACT_01);
 					p_task_normal_dta->alarm_on = false;
 					p_task_normal_dta->tick = wait_time;
@@ -285,13 +279,11 @@ void task_normal_update(void *parameters)
 				}
 
 				if(p_task_normal_dta->event == EV_SYS_02_DETECTED && p_task_normal_dta->detected == false){
-					LOGGER_LOG("Detectado\n");
 					p_task_normal_dta->detected = true;
 					timer = true;
 				}
 
 				if(p_task_normal_dta->event == EV_SYS_02_NODETECTED && p_task_normal_dta->detected == true){
-					LOGGER_LOG("No detectado\n");
 					p_task_normal_dta->detected = false;
 					timer = true;
 				}
@@ -313,10 +305,10 @@ void task_normal_update(void *parameters)
 					p_task_normal_dta -> select = 0;
 
 					displayCharPositionWrite(0,0);
-					displayStringWrite(">Normal  Set_up");
-					displayCharPositionWrite(1,0);
+					displayStringWrite(">Normal   Set_up");
+					displayCharPositionWrite(0,1);
 					displayStringWrite("                ");
-					set_up_mode = true;
+					show_temperature = false;
 
 				}
 
@@ -348,10 +340,10 @@ void task_normal_update(void *parameters)
 					p_task_normal_dta -> select = 0;
 
 					displayCharPositionWrite(0,0);
-					displayStringWrite(">Normal  Set_up");
-					displayCharPositionWrite(1,0);
+					displayStringWrite(">Normal   Set_up");
+					displayCharPositionWrite(0,1);
 					displayStringWrite("                ");
-					set_up_mode = true;
+					show_temperature = false;
 
 				}
 

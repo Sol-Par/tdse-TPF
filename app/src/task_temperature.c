@@ -63,7 +63,8 @@ uint32_t sample_id_2;
 uint32_t sample_array_1[AVERAGER_SIZE];
 uint32_t sample_array_2[AVERAGER_SIZE];
 
-uint32_t aux;
+uint32_t aux1;
+uint32_t aux2;
 
 uint32_t inner_temp;
 uint32_t promedio;
@@ -90,6 +91,7 @@ void task_temperature_init(void *parameters)
 	HAL_NVIC_SetPriority(ADC1_2_IRQn, 2, 0);
 	HAL_NVIC_EnableIRQ(ADC1_2_IRQn);
 
+	sample_id_1 = 0;
 	sample_id_2 = 0;
 	tickstart = HAL_GetTick();
 }
@@ -124,57 +126,56 @@ bool test3_tick() {
 	bool flag1 = false;
 	bool flag2 = false;
 
-	if (sample_id_1>=AVERAGER_SIZE && sample_id_2 >= AVERAGER_SIZE) {
-		b_done = true;
+	if(sample_id_1 >= AVERAGER_SIZE)
 		flag1 = true;
+
+
+	if(sample_id_2 >= AVERAGER_SIZE)
 		flag2 = true;
-	}
+
+	if(flag1 == true && flag2 == true)
+		b_done = true;
 
 	/* start of first conversion */
-	if (0==sample_id_1 && flag1 == false) {
+	if (sample_id_1 == 0 && flag1 == false) {
 		b_trig_new_conversion_1 = true;
 	}
 
-	if (b_trig_new_conversion_1 && flag1 == false) {
+	if (b_trig_new_conversion_1 == true && flag1 == false) {
 		b_trig_new_conversion_1 = false;
 		HAL_ADC_Start_IT(&hadc1);
 	}
 
-	if (0==sample_id_2 && flag2 == false) {
+	if (sample_id_2 == 0 && flag2 == false) {
 		b_trig_new_conversion_2 = true;
 	}
 
-	if (b_trig_new_conversion_2 && flag2 == false) {
+	if (b_trig_new_conversion_2 == true && flag2 == false) {
 		b_trig_new_conversion_2 = false;
 		HAL_ADC_Start_IT(&hadc2);
 	}
 
 	if (b_done  && flag1 == true && flag2 == true) {
 
-		aux = 0;
-		inner_temp = 0;
+		aux1 = 0;
 
 		for (sample_id_1=0;sample_id_1<AVERAGER_SIZE;sample_id_1++) {
-			aux = aux + sample_array_1[sample_id_1];
+			inner_temp = 0;
+			aux1 = aux1 + sample_array_1[sample_id_1];
 		}
 
-		inner_temp = aux/AVERAGER_SIZE;
-
-		inner_temp = (3.30 * (float)inner_temp)/(4096);
-
-		inner_temp = 25 + ((1.43 - (float)inner_temp) / 4.3) ;
+		inner_temp = (((1.43 - ((3.30 * (float)(aux1/AVERAGER_SIZE))/(4096))) / 0.0043) + 25.0);
 
 		sample_id_1 = 0;
 
-		aux = 0;
-		promedio = 0;
+		aux2 = 0;
 
 		for (sample_id_2=0;sample_id_2<AVERAGER_SIZE;sample_id_2++) {
-			aux = aux + sample_array_2[sample_id_2];
+			promedio = 0;
+			aux2 = aux2 + sample_array_2[sample_id_2];
 		}
 
-		promedio = aux/AVERAGER_SIZE;
-		promedio = (3.30 * 100 * (float)promedio)/(4096);
+		promedio = (3.30 * 100.0 * (float)(aux2/AVERAGER_SIZE))/(4096.0);
 		sample_id_2 = 0;
 	}
 	return b_done;

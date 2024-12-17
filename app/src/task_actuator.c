@@ -160,6 +160,7 @@ void task_actuator_update(void *parameters)
 
 						if(EV_ACT_XX_BLINK == p_task_actuator_dta->event)
 						{
+							LOGGER_LOG("Hola\n");
 							HAL_GPIO_WritePin(p_task_actuator_cfg->gpio_port, p_task_actuator_cfg->pin, p_task_actuator_cfg->led_on);
 							p_task_actuator_dta->state = ST_ACT_XX_BLINK_ON;
 							p_task_actuator_dta->tick = DEL_ACT_XX_BLI;
